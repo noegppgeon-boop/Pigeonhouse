@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Dark bg -->
+  <rect width="512" height="512" rx="96" fill="#0F0F17"/>
+  <rect x="2" y="2" width="508" height="508" rx="94" stroke="url(#border)" stroke-width="3"/>
+  
+  <!-- Stylized PH monogram where P forms bird head/body, H is the house -->
+  
+  <!-- H structure (house) - subtle in background -->
+  <path d="M310 160v200M390 160v200M310 260h80" 
+        stroke="#1C1C28" stroke-width="28" stroke-linecap="round"/>
+  
+  <!-- P stroke - main letter, bird-like -->
+  <path d="M140 380V145c0-10 8-18 18-18h70c50 0 88 32 88 75s-38 75-88 75H190" 
+        stroke="url(#pgradient)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Bird beak from P curve -->
+  <path d="M298 175l35-20 5 30" 
+        fill="#D97757" opacity="0.9"/>
+  
+  <!-- Wing detail -->
+  <path d="M240 200c20-30 60-50 100-45" 
+        stroke="#D97757" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M240 215c20-25 55-40 90-35" 
+        stroke="#D97757" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.3"/>
+  
+  <!-- Eye -->
+  <circle cx="260" cy="185" r="10" fill="#F0EBE3"/>
+  <circle cx="263" cy="183" r="5" fill="#0F0F17"/>
+  
+  <!-- Flame rising from P base -->
+  <g opacity="0.85">
+    <path d="M140 380c5-15 10-30 18-35 8-5 6 10 14 0 8-10 12-5 16 8 4 13 10 0 14-8" 
+          stroke="#E85D4A" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M155 370c3-8 8-15 12-12 4 3 4-5 8-10" 
+          stroke="#D97757" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6"/>
+  </g>
+  
+  <defs>
+    <linearGradient id="pgradient" x1="140" y1="127" x2="300" y2="380">
+      <stop offset="0%" stop-color="#E89470"/>
+      <stop offset="50%" stop-color="#D97757"/>
+      <stop offset="100%" stop-color="#E85D4A"/>
+    </linearGradient>
+    <linearGradient id="border" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#D97757" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#E85D4A" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+</svg>

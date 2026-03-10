@@ -1,0 +1,4130 @@
+{
+  "address": "49NjaVFxXUhWg59g4bEDtcNQxsArFz9MnyeQGPxUDugi",
+  "metadata": {
+    "name": "pigeon_hook",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Transfer Hook for PigeonHouse - fee accrual + permissionless sweep"
+  },
+  "instructions": [
+    {
+      "name": "accrue_creator_reward",
+      "discriminator": [
+        141,
+        180,
+        86,
+        98,
+        188,
+        226,
+        0,
+        234
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "reserve_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "creator_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "creator_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "base_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "accrue_partner_payout",
+      "discriminator": [
+        109,
+        226,
+        180,
+        153,
+        162,
+        57,
+        89,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "reserve_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "partner_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "partner_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "source_mint",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "activate_fee",
+      "discriminator": [
+        190,
+        254,
+        212,
+        101,
+        6,
+        25,
+        159,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "fee_accrual_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bonding_curve",
+          "docs": [
+            "SAFETY: owner validated against hook_config.pigeon_house_program, complete flag at offset 112."
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "add_exempt",
+      "discriminator": [
+        170,
+        72,
+        81,
+        28,
+        225,
+        107,
+        65,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "exempt_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  101,
+                  120,
+                  101,
+                  109,
+                  112,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "exempt_address"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "exempt_address",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "apply_reputation_decay",
+      "discriminator": [
+        163,
+        62,
+        24,
+        133,
+        159,
+        101,
+        219,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "creator_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "creator_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "creator_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "approve_partner",
+      "discriminator": [
+        115,
+        37,
+        104,
+        6,
+        228,
+        255,
+        66,
+        110
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "partner_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "partner_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "claim_creator_reward",
+      "discriminator": [
+        174,
+        210,
+        14,
+        57,
+        187,
+        18,
+        230,
+        37
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reserve_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pigeon_mint",
+          "address": "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "docs": [
+            "Reserve vault's PIGEON ATA (source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "creator_pigeon_ata",
+          "docs": [
+            "Creator's PIGEON ATA (destination)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_partner_payout",
+      "discriminator": [
+        114,
+        56,
+        148,
+        223,
+        169,
+        94,
+        38,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reserve_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pigeon_mint",
+          "address": "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "writable": true
+        },
+        {
+          "name": "partner_pigeon_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_vault",
+      "docs": [
+        "Emergency recovery — authority claims stuck tokens. NOT in mainnet burn flow."
+      ],
+      "discriminator": [
+        87,
+        111,
+        176,
+        185,
+        53,
+        172,
+        227,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The token mint being claimed"
+          ]
+        },
+        {
+          "name": "fee_accrual_vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_ata",
+          "docs": [
+            "Vault's token ATA (source — holds swept tokens)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destination_ata",
+          "docs": [
+            "Destination ATA (authority's wallet or designated address)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "deactivate_partner",
+      "discriminator": [
+        181,
+        128,
+        244,
+        148,
+        6,
+        232,
+        154,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "partner_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "partner_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "partner_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "execute_twap_buyback",
+      "discriminator": [
+        230,
+        132,
+        78,
+        249,
+        105,
+        1,
+        85,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pigeon_burned",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "init_fee_vault",
+      "discriminator": [
+        141,
+        17,
+        88,
+        209,
+        137,
+        84,
+        89,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The token mint this vault will track"
+          ]
+        },
+        {
+          "name": "fee_accrual_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "extra_account_metas",
+          "docs": [
+            "ExtraAccountMetaList PDA for the transfer hook",
+            "Seeds: [\"extra-account-metas\", token_mint]"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  116,
+                  114,
+                  97,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "docs": [
+            "Vault's PIGEON ATA (for receiving PIGEON during sweep)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pigeon_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_hook",
+      "discriminator": [
+        37,
+        101,
+        119,
+        255,
+        156,
+        39,
+        252,
+        232
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "burn_bps",
+          "type": "u16"
+        },
+        {
+          "name": "min_transfer",
+          "type": "u64"
+        },
+        {
+          "name": "pigeon_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "pigeon_house_program",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "initialize_reserve_vault",
+      "discriminator": [
+        180,
+        174,
+        86,
+        24,
+        107,
+        126,
+        130,
+        152
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "reserve_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pigeon_mint",
+          "address": "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "docs": [
+            "Reserve vault's PIGEON ATA"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "reserve_cap",
+          "type": "u64"
+        },
+        {
+          "name": "max_single_release",
+          "type": "u64"
+        },
+        {
+          "name": "cooldown_slots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_treasury_config",
+      "discriminator": [
+        42,
+        221,
+        143,
+        37,
+        13,
+        169,
+        92,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "treasury_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "register_creator_profile",
+      "discriminator": [
+        246,
+        224,
+        32,
+        12,
+        78,
+        153,
+        218,
+        95
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_launch_referral",
+      "discriminator": [
+        13,
+        141,
+        132,
+        48,
+        131,
+        204,
+        175,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner_profile",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "launch_referral",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  117,
+                  110,
+                  99,
+                  104,
+                  95,
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  114,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bonding_curve",
+          "docs": [
+            "Must be owned by PIGEON_HOUSE_PROGRAM"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "token_mint",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "register_partner",
+      "discriminator": [
+        126,
+        105,
+        229,
+        224,
+        136,
+        11,
+        184,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "partner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "partner_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  110,
+                  101,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "partner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "payout_bps",
+          "type": "u16"
+        },
+        {
+          "name": "payout_source",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "release_reserve",
+      "discriminator": [
+        170,
+        102,
+        52,
+        144,
+        33,
+        176,
+        41,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "reserve_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pigeon_mint",
+          "address": "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "docs": [
+            "Reserve vault's PIGEON ATA (source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "destination_ata",
+          "docs": [
+            "Destination PIGEON ATA"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "use_type",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "remove_exempt",
+      "discriminator": [
+        245,
+        40,
+        254,
+        205,
+        149,
+        112,
+        101,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "exempt_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  101,
+                  120,
+                  101,
+                  109,
+                  112,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "exempt_address"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "exempt_address",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "sweep_and_burn",
+      "docs": [
+        "Legacy sweep — withdraw-only, no swap/burn. Kept for emergency recovery."
+      ],
+      "discriminator": [
+        22,
+        91,
+        21,
+        65,
+        236,
+        67,
+        74,
+        175
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone can call — permissionless"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The token mint whose fees are being swept"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_accrual_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token_ata",
+          "docs": [
+            "Vault's token ATA (receives withheld TransferFee tokens)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sweep_fee_accrual",
+      "docs": [
+        "Mainnet burn path — on-chain Jupiter swap + burn_checked in single instruction.",
+        "Permissionless. Single-mint. No authority wallet in the path."
+      ],
+      "discriminator": [
+        249,
+        63,
+        132,
+        187,
+        120,
+        39,
+        209,
+        184
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone can call — permissionless"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The launched token mint whose fees are being swept"
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_accrual_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_source_ata",
+          "docs": [
+            "Program-owned ATA: holds withdrawn launched tokens (source for swap)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "pigeon_mint",
+          "docs": [
+            "PIGEON mint — validated against hook_config"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_pigeon_ata",
+          "docs": [
+            "Program-owned ATA: receives PIGEON from Jupiter, then burned"
+          ],
+          "writable": true
+        },
+        {
+          "name": "jupiter_program",
+          "docs": [
+            "Jupiter v6 program"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": [
+        {
+          "name": "jupiter_route_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "transfer_hook",
+      "docs": [
+        "Anchor-accessible transfer_hook (test-only; Token-2022 uses fallback)."
+      ],
+      "discriminator": [
+        220,
+        57,
+        220,
+        152,
+        126,
+        125,
+        97,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "source_token"
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "destination_token"
+        },
+        {
+          "name": "owner"
+        },
+        {
+          "name": "extra_account_metas"
+        },
+        {
+          "name": "hook_config",
+          "docs": [
+            "HookConfig PDA (extra account #0)"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_accrual_vault",
+          "docs": [
+            "FeeAccrualVault PDA (extra account #1) — writable for counter updates"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  97,
+                  99,
+                  99,
+                  114,
+                  117,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_creator_metrics",
+      "discriminator": [
+        42,
+        114,
+        203,
+        21,
+        224,
+        75,
+        164,
+        4
+      ],
+      "accounts": [
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone can call"
+          ],
+          "signer": true
+        },
+        {
+          "name": "creator_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  114,
+                  101,
+                  97,
+                  116,
+                  111,
+                  114,
+                  95,
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "creator_pubkey"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "creator_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_hook_config",
+      "discriminator": [
+        238,
+        90,
+        242,
+        7,
+        243,
+        85,
+        69,
+        32
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "hook_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_mode",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "new_burn_bps",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "new_min_transfer",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "new_authority",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_reserve_policy",
+      "discriminator": [
+        196,
+        116,
+        212,
+        14,
+        200,
+        111,
+        249,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "reserve_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  115,
+                  101,
+                  114,
+                  118,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "reserve_cap",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "max_single_release",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "cooldown_slots",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "permitted_uses",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "overflow_action",
+          "type": {
+            "option": "u8"
+          }
+        },
+        {
+          "name": "new_authority",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_treasury_config",
+      "discriminator": [
+        129,
+        100,
+        213,
+        18,
+        68,
+        118,
+        249,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "treasury_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "buyback_enabled",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "buyback_bps",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "min_buyback_amount",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "min_interval",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "treasury_wallet",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "new_authority",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CreatorProfile",
+      "discriminator": [
+        251,
+        250,
+        184,
+        111,
+        214,
+        178,
+        32,
+        221
+      ]
+    },
+    {
+      "name": "ExemptAccount",
+      "discriminator": [
+        85,
+        230,
+        198,
+        247,
+        209,
+        63,
+        108,
+        226
+      ]
+    },
+    {
+      "name": "FeeAccrualVault",
+      "discriminator": [
+        95,
+        81,
+        108,
+        65,
+        186,
+        204,
+        135,
+        172
+      ]
+    },
+    {
+      "name": "HookConfig",
+      "discriminator": [
+        137,
+        155,
+        101,
+        95,
+        138,
+        72,
+        8,
+        182
+      ]
+    },
+    {
+      "name": "LaunchReferral",
+      "discriminator": [
+        121,
+        190,
+        190,
+        159,
+        32,
+        172,
+        203,
+        153
+      ]
+    },
+    {
+      "name": "PartnerProfile",
+      "discriminator": [
+        173,
+        71,
+        40,
+        66,
+        86,
+        175,
+        255,
+        204
+      ]
+    },
+    {
+      "name": "ReserveVault",
+      "discriminator": [
+        129,
+        241,
+        32,
+        197,
+        244,
+        142,
+        226,
+        71
+      ]
+    },
+    {
+      "name": "TreasuryConfig",
+      "discriminator": [
+        124,
+        54,
+        212,
+        227,
+        213,
+        189,
+        168,
+        41
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CreatorMetricsUpdated",
+      "discriminator": [
+        201,
+        131,
+        110,
+        108,
+        75,
+        51,
+        184,
+        66
+      ]
+    },
+    {
+      "name": "CreatorProfileCreated",
+      "discriminator": [
+        176,
+        54,
+        59,
+        229,
+        108,
+        194,
+        247,
+        111
+      ]
+    },
+    {
+      "name": "CreatorRewardAccrued",
+      "discriminator": [
+        66,
+        81,
+        228,
+        142,
+        36,
+        99,
+        235,
+        144
+      ]
+    },
+    {
+      "name": "CreatorRewardClaimed",
+      "discriminator": [
+        105,
+        87,
+        87,
+        187,
+        251,
+        208,
+        251,
+        124
+      ]
+    },
+    {
+      "name": "ExemptAccountChanged",
+      "discriminator": [
+        131,
+        205,
+        91,
+        112,
+        220,
+        190,
+        41,
+        22
+      ]
+    },
+    {
+      "name": "FeeActivated",
+      "discriminator": [
+        15,
+        169,
+        241,
+        6,
+        237,
+        176,
+        194,
+        161
+      ]
+    },
+    {
+      "name": "HookConfigUpdated",
+      "discriminator": [
+        124,
+        57,
+        60,
+        231,
+        221,
+        95,
+        253,
+        85
+      ]
+    },
+    {
+      "name": "HookFeeAccrued",
+      "discriminator": [
+        231,
+        182,
+        52,
+        181,
+        247,
+        3,
+        21,
+        11
+      ]
+    },
+    {
+      "name": "HookSwapSkipped",
+      "discriminator": [
+        61,
+        163,
+        121,
+        48,
+        6,
+        104,
+        118,
+        128
+      ]
+    },
+    {
+      "name": "LaunchReferralCreated",
+      "discriminator": [
+        12,
+        8,
+        183,
+        87,
+        62,
+        109,
+        150,
+        178
+      ]
+    },
+    {
+      "name": "PartnerApproved",
+      "discriminator": [
+        43,
+        212,
+        179,
+        3,
+        94,
+        50,
+        69,
+        241
+      ]
+    },
+    {
+      "name": "PartnerDeactivated",
+      "discriminator": [
+        147,
+        175,
+        145,
+        66,
+        201,
+        237,
+        76,
+        18
+      ]
+    },
+    {
+      "name": "PartnerPayoutAccrued",
+      "discriminator": [
+        63,
+        185,
+        163,
+        3,
+        24,
+        50,
+        94,
+        196
+      ]
+    },
+    {
+      "name": "PartnerPayoutClaimed",
+      "discriminator": [
+        45,
+        158,
+        45,
+        45,
+        11,
+        151,
+        9,
+        30
+      ]
+    },
+    {
+      "name": "PartnerRegistered",
+      "discriminator": [
+        17,
+        156,
+        161,
+        97,
+        14,
+        245,
+        207,
+        212
+      ]
+    },
+    {
+      "name": "ReputationDecayed",
+      "discriminator": [
+        204,
+        136,
+        115,
+        21,
+        22,
+        21,
+        168,
+        248
+      ]
+    },
+    {
+      "name": "ReserveDeposited",
+      "discriminator": [
+        97,
+        31,
+        143,
+        158,
+        209,
+        4,
+        254,
+        91
+      ]
+    },
+    {
+      "name": "ReserveOverflow",
+      "discriminator": [
+        170,
+        198,
+        245,
+        64,
+        254,
+        117,
+        26,
+        103
+      ]
+    },
+    {
+      "name": "ReservePolicyUpdated",
+      "discriminator": [
+        172,
+        154,
+        232,
+        23,
+        87,
+        98,
+        250,
+        114
+      ]
+    },
+    {
+      "name": "ReserveReleased",
+      "discriminator": [
+        155,
+        224,
+        78,
+        183,
+        56,
+        98,
+        13,
+        147
+      ]
+    },
+    {
+      "name": "SweepExecuted",
+      "discriminator": [
+        156,
+        52,
+        106,
+        229,
+        106,
+        104,
+        73,
+        186
+      ]
+    },
+    {
+      "name": "TreasuryBuybackExecuted",
+      "discriminator": [
+        80,
+        156,
+        60,
+        51,
+        213,
+        73,
+        238,
+        5
+      ]
+    },
+    {
+      "name": "TreasuryConfigUpdated",
+      "discriminator": [
+        53,
+        127,
+        235,
+        252,
+        191,
+        145,
+        248,
+        110
+      ]
+    },
+    {
+      "name": "VestingForfeited",
+      "discriminator": [
+        36,
+        104,
+        56,
+        181,
+        13,
+        100,
+        211,
+        165
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "HookDisabled",
+      "msg": "Hook is disabled"
+    },
+    {
+      "code": 6001,
+      "name": "BelowThreshold",
+      "msg": "Transfer below minimum threshold"
+    },
+    {
+      "code": 6002,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidMint",
+      "msg": "Invalid mint"
+    },
+    {
+      "code": 6005,
+      "name": "FeeAlreadyActivated",
+      "msg": "TransferFee already activated for this token"
+    },
+    {
+      "code": 6006,
+      "name": "FeeNotActivated",
+      "msg": "TransferFee not yet activated"
+    },
+    {
+      "code": 6007,
+      "name": "VaultEmpty",
+      "msg": "Vault is empty, nothing to sweep"
+    },
+    {
+      "code": 6008,
+      "name": "SwapFailed",
+      "msg": "DEX swap failed or returned zero"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidMode",
+      "msg": "Invalid hook mode"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidProgram",
+      "msg": "Invalid program ID"
+    },
+    {
+      "code": 6011,
+      "name": "BelowSweepThreshold",
+      "msg": "Below sweep threshold"
+    },
+    {
+      "code": 6012,
+      "name": "BurnMismatch",
+      "msg": "Burn amount mismatch"
+    }
+  ],
+  "types": [
+    {
+      "name": "CreatorMetricsUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokens_launched",
+            "type": "u32"
+          },
+          {
+            "name": "tokens_graduated",
+            "type": "u32"
+          },
+          {
+            "name": "tokens_dead",
+            "type": "u32"
+          },
+          {
+            "name": "reputation_score",
+            "type": "u32"
+          },
+          {
+            "name": "graduation_rate",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatorProfile",
+      "docs": [
+        "Creator reputation and reward profile",
+        "PDA: [\"creator_profile\", creator]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "docs": [
+              "Creator wallet"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "tokens_launched",
+            "type": "u32"
+          },
+          {
+            "name": "tokens_graduated",
+            "type": "u32"
+          },
+          {
+            "name": "tokens_dead",
+            "type": "u32"
+          },
+          {
+            "name": "total_volume_pigeon",
+            "type": "u64"
+          },
+          {
+            "name": "graduation_rate",
+            "docs": [
+              "graduated / launched × 10000"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "avg_survival_slots",
+            "docs": [
+              "Average post-graduation survival (slots)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "best_launch_volume",
+            "docs": [
+              "Highest volume single launch"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reputation_score",
+            "docs": [
+              "0-10000 basis points"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "last_decay_slot",
+            "docs": [
+              "Last decay slot"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "consecutive_failures",
+            "type": "u8"
+          },
+          {
+            "name": "consecutive_successes",
+            "type": "u8"
+          },
+          {
+            "name": "total_rewards_earned",
+            "type": "u64"
+          },
+          {
+            "name": "total_rewards_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "pending_rewards",
+            "type": "u64"
+          },
+          {
+            "name": "vesting_start_slot",
+            "type": "u64"
+          },
+          {
+            "name": "vesting_end_slot",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatorProfileCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "initial_score",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatorRewardAccrued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "vesting_multiplier",
+            "type": "u32"
+          },
+          {
+            "name": "pending_rewards",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreatorRewardClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_pending",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExemptAccount",
+      "docs": [
+        "Exempt account marker",
+        "PDA: [\"hook_exempt\", address]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "docs": [
+              "The exempt address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExemptAccountChanged",
+      "docs": [
+        "Emitted when exempt status changes"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "docs": [
+              "The address whose exempt status changed"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "exempt",
+            "docs": [
+              "true = added to exempt list, false = removed"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "changed_by",
+            "docs": [
+              "Who made the change"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeAccrualVault",
+      "docs": [
+        "Per-mint fee accrual vault",
+        "PDA: [\"fee_accrual\", token_mint]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "Token mint this vault tracks"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_accrued",
+            "docs": [
+              "Lifetime accrued amount (monotonically increasing)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_swept",
+            "docs": [
+              "Lifetime swept/burned amount"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_accrual_slot",
+            "docs": [
+              "Slot of last accrual event"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "fee_activated",
+            "docs": [
+              "Whether TransferFee has been activated (post-graduation)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "total_burned",
+            "docs": [
+              "Lifetime PIGEON burned for this mint"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "sweep_count",
+            "docs": [
+              "Number of sweeps executed"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "last_sweep_slot",
+            "docs": [
+              "Slot of last sweep"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeActivated",
+      "docs": [
+        "Emitted when TransferFee is activated post-graduation"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "Token mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_bps",
+            "docs": [
+              "Fee basis points set"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "activated_by",
+            "docs": [
+              "Who triggered activation"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookConfig",
+      "docs": [
+        "Global hook configuration",
+        "PDA: [\"hook_config\"]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Authority that can update config (Squads/multisig compatible)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mode",
+            "docs": [
+              "Hook operating mode"
+            ],
+            "type": {
+              "defined": {
+                "name": "HookMode"
+              }
+            }
+          },
+          {
+            "name": "burn_bps",
+            "docs": [
+              "TransferFee basis points applied post-graduation (P0: 100 = 1%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "reserve_bps",
+            "docs": [
+              "Reserve portion basis points (P0: always 0)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "min_transfer",
+            "docs": [
+              "Minimum transfer amount to trigger hook logic"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pigeon_mint",
+            "docs": [
+              "PIGEON mint address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pigeon_house_program",
+            "docs": [
+              "PigeonHouse program ID (for BondingCurve owner validation)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_accrued_all",
+            "docs": [
+              "Global lifetime accrued counter (all mints)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_swept_all",
+            "docs": [
+              "Global lifetime swept counter (all mints)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_burned_all",
+            "docs": [
+              "Global lifetime PIGEON burned counter (all mints)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_sweep_threshold",
+            "docs": [
+              "Minimum accrued balance before sweep is allowed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookConfigUpdated",
+      "docs": [
+        "Emitted on HookConfig updates"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "docs": [
+              "Field name changed"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "old_value",
+            "docs": [
+              "Old value (encoded as u64)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "new_value",
+            "docs": [
+              "New value (encoded as u64)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Authority that made the change"
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookFeeAccrued",
+      "docs": [
+        "Emitted by execute_hook on every qualifying transfer (locked schema)"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "Token mint whose transfer triggered this"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Fee amount accrued (in token units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_accrued",
+            "docs": [
+              "Lifetime total accrued for this mint"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "transfer_amount",
+            "docs": [
+              "Original transfer amount"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "source",
+            "docs": [
+              "Source token account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "destination",
+            "docs": [
+              "Destination token account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "slot",
+            "docs": [
+              "Slot number"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookMode",
+      "docs": [
+        "Hook operating mode"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "LogOnly"
+          },
+          {
+            "name": "Disabled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookSwapSkipped",
+      "docs": [
+        "Emitted when hook skips swap (mode=LogOnly, below threshold, etc.)"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "Token mint"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "transfer_amount",
+            "docs": [
+              "Transfer amount that was skipped"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reason",
+            "docs": [
+              "Reason code: 0=disabled, 1=below_threshold, 2=fee_not_activated, 3=log_only"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "slot",
+            "docs": [
+              "Slot"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchReferral",
+      "docs": [
+        "Launch-to-partner referral link",
+        "PDA: [\"launch_referral\", token_mint]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "total_payout",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchReferralCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OverflowAction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "BurnExcess"
+          },
+          {
+            "name": "SendToTreasury"
+          },
+          {
+            "name": "PauseReserve"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerApproved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "approved_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "approved_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerDeactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "deactivated_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_at_deactivation",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerPayoutAccrued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "source_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_earned",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerPayoutClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_pending",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerProfile",
+      "docs": [
+        "Partner profile for revenue sharing",
+        "PDA: [\"partner_profile\", partner]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "docs": [
+              "Partner wallet"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority_approved",
+            "docs": [
+              "Platform approval required"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "approved_by",
+            "docs": [
+              "Who approved"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "approved_at",
+            "docs": [
+              "Approval timestamp"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "payout_bps",
+            "docs": [
+              "Partner's share (max 500 = 5%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "payout_source",
+            "docs": [
+              "Which fees partner earns from"
+            ],
+            "type": {
+              "defined": {
+                "name": "PayoutSource"
+              }
+            }
+          },
+          {
+            "name": "total_earned",
+            "type": "u64"
+          },
+          {
+            "name": "total_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "pending_payout",
+            "type": "u64"
+          },
+          {
+            "name": "total_referrals",
+            "type": "u64"
+          },
+          {
+            "name": "total_referred_volume",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "last_payout_slot",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PartnerRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partner",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout_bps",
+            "type": "u16"
+          },
+          {
+            "name": "payout_source",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutSource",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PlatformFees"
+          },
+          {
+            "name": "SweepBurns"
+          },
+          {
+            "name": "Both"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReputationDecayed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_score",
+            "type": "u32"
+          },
+          {
+            "name": "new_score",
+            "type": "u32"
+          },
+          {
+            "name": "periods_elapsed",
+            "type": "u32"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReserveDeposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_reserved",
+            "type": "u64"
+          },
+          {
+            "name": "vault_balance",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReserveOverflow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "excess_amount",
+            "type": "u64"
+          },
+          {
+            "name": "action",
+            "type": "string"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReservePolicyUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": "string"
+          },
+          {
+            "name": "old_value",
+            "type": "u64"
+          },
+          {
+            "name": "new_value",
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReserveReleased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "use_type",
+            "type": "u8"
+          },
+          {
+            "name": "destination",
+            "type": "pubkey"
+          },
+          {
+            "name": "released_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_released",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReserveVault",
+      "docs": [
+        "Reserve vault — holds PIGEON from sweep split",
+        "PDA: [\"reserve_vault\"]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Authority (Squads multisig)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pigeon_mint",
+            "docs": [
+              "PIGEON mint reference"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_reserved",
+            "docs": [
+              "Lifetime PIGEON reserved"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_released",
+            "docs": [
+              "Lifetime PIGEON released"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "reserve_cap",
+            "docs": [
+              "Max PIGEON in reserve (0 = unlimited)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "overflow_action",
+            "docs": [
+              "What to do when cap exceeded"
+            ],
+            "type": {
+              "defined": {
+                "name": "OverflowAction"
+              }
+            }
+          },
+          {
+            "name": "max_single_release",
+            "docs": [
+              "Max single release amount"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "cooldown_slots",
+            "docs": [
+              "Cooldown between releases (slots)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_release_slot",
+            "docs": [
+              "Last release slot"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "release_count",
+            "docs": [
+              "Total release count"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "permitted_uses",
+            "docs": [
+              "Permitted uses bitmask"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SweepExecuted",
+      "docs": [
+        "Emitted by sweep_fee_accrual on successful on-chain swap + burn (locked schema)"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "token_mint",
+            "docs": [
+              "Which launched token was swept"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "input_amount",
+            "docs": [
+              "Withdrawn token amount (TransferFee withheld)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pigeon_received",
+            "docs": [
+              "PIGEON received from Jupiter swap"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "pigeon_burned",
+            "docs": [
+              "PIGEON burned (== pigeon_received, burned in same ix)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "swept_by",
+            "docs": [
+              "Who triggered the sweep"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_swept",
+            "docs": [
+              "Lifetime swept for this mint"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_burned",
+            "docs": [
+              "Lifetime PIGEON burned for this mint"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_burned_all",
+            "docs": [
+              "Global lifetime PIGEON burned"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "docs": [
+              "Slot"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryBuybackExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sol_spent",
+            "type": "u64"
+          },
+          {
+            "name": "pigeon_burned",
+            "type": "u64"
+          },
+          {
+            "name": "executed_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_buyback_burned",
+            "type": "u64"
+          },
+          {
+            "name": "buyback_count",
+            "type": "u64"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryConfig",
+      "docs": [
+        "Treasury configuration for TWAP buyback",
+        "PDA: [\"treasury_config\"]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Authority (Squads multisig compatible)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_wallet",
+            "docs": [
+              "Treasury wallet that funds buybacks"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "buyback_enabled",
+            "docs": [
+              "Kill switch"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "buyback_bps",
+            "docs": [
+              "Max BPS per buyback (cap: 500)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "min_buyback_amount",
+            "docs": [
+              "Min PIGEON equivalent per buyback"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "min_buyback_interval_slots",
+            "docs": [
+              "Cooldown between buybacks (slots)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_buyback_slot",
+            "docs": [
+              "Last buyback slot"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_buyback_burned",
+            "docs": [
+              "Lifetime PIGEON burned via buyback"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_buyback_count",
+            "docs": [
+              "Total buyback count"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": "string"
+          },
+          {
+            "name": "old_value",
+            "type": "u64"
+          },
+          {
+            "name": "new_value",
+            "type": "u64"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VestingForfeited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "forfeited_amount",
+            "type": "u64"
+          },
+          {
+            "name": "reason",
+            "type": "string"
+          },
+          {
+            "name": "reputation_at_forfeit",
+            "type": "u32"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

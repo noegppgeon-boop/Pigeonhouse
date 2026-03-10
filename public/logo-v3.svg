@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Minimal, geometric - P as pigeon silhouette -->
+  <rect width="512" height="512" rx="128" fill="#0F0F17"/>
+  
+  <!-- Geometric pigeon formed from P -->
+  <g transform="translate(100, 80)">
+    <!-- Body/P stem -->
+    <rect x="40" y="60" width="40" height="240" rx="20" fill="url(#g3main)"/>
+    
+    <!-- Head circle (P bowl) -->
+    <circle cx="160" cy="120" r="70" stroke="url(#g3main)" stroke-width="36" fill="none"/>
+    
+    <!-- Connect head to body -->
+    <rect x="60" y="60" width="100" height="36" rx="18" fill="url(#g3main)"/>
+    
+    <!-- Beak -->
+    <polygon points="225,100 270,115 225,130" fill="#E85D4A"/>
+    
+    <!-- Eye -->
+    <circle cx="170" cy="108" r="12" fill="#F0EBE3"/>
+    <circle cx="173" cy="106" r="6" fill="#0F0F17"/>
+    
+    <!-- Tail feathers (angular) -->
+    <path d="M60 300l-35 40h30z" fill="#D97757" opacity="0.7"/>
+    <path d="M60 290l-50 55h25z" fill="#E85D4A" opacity="0.5"/>
+    
+    <!-- Wing detail -->
+    <path d="M90 150c30-20 70-25 105-15" stroke="#D97757" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.4"/>
+    
+    <!-- Fire particles -->
+    <circle cx="55" cy="320" r="4" fill="#E85D4A" opacity="0.6"/>
+    <circle cx="70" cy="330" r="3" fill="#D97757" opacity="0.4"/>
+    <circle cx="45" cy="335" r="2.5" fill="#E85D4A" opacity="0.3"/>
+  </g>
+  
+  <defs>
+    <linearGradient id="g3main" x1="100" y1="80" x2="300" y2="400">
+      <stop offset="0%" stop-color="#E89470"/>
+      <stop offset="100%" stop-color="#D97757"/>
+    </linearGradient>
+  </defs>
+</svg>

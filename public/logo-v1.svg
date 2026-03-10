@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#0F0F17"/>
+  <circle cx="256" cy="256" r="240" stroke="url(#ring)" stroke-width="4"/>
+  
+  <!-- P letter as bird body -->
+  <path d="M180 380V140h80c55 0 95 35 95 80s-40 80-95 80h-30" 
+        stroke="url(#grad1)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Bird wing swoosh from P curve -->
+  <path d="M310 180c30-15 65-25 90-20 -10 25-35 55-70 70" 
+        stroke="url(#grad2)" stroke-width="16" stroke-linecap="round" fill="none"/>
+  
+  <!-- Small flame at bottom of P -->
+  <path d="M180 380c0 0 8-20 20-25s12 15 24-5c8-13 16 5 20 15" 
+        stroke="#E85D4A" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.8"/>
+  
+  <!-- Bird eye dot -->
+  <circle cx="290" cy="195" r="8" fill="#D97757"/>
+  
+  <defs>
+    <linearGradient id="grad1" x1="180" y1="140" x2="350" y2="380">
+      <stop offset="0%" stop-color="#D97757"/>
+      <stop offset="100%" stop-color="#E85D4A"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="310" y1="180" x2="400" y2="230">
+      <stop offset="0%" stop-color="#D97757" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#E85D4A" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#D97757" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#E85D4A" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+</svg>

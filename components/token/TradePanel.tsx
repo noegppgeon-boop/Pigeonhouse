@@ -1,0 +1,450 @@
+"use client";
+
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
+import { Flame, Settings, ArrowDown, ArrowUpRight, ArrowDownRight, Wallet, Loader2 } from "lucide-react";
+import BN from "bn.js";
+import dynamic from "next/dynamic";
+import {
+  type BondingCurveData,
+  type GlobalConfigData,
+  getQuoteBuy,
+  getQuoteSell,
+  executeBuy,
+  executeSell,
+  formatPigeon,
+  formatToken,
+} from "@/lib/pigeon_house";
+import { PublicKey } from "@solana/web3.js";
+import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, getAccount } from "@solana/spl-token";
+import { DEFAULT_SLIPPAGE_BPS, PIGEON_DECIMALS, PIGEON_MINT, TOKEN_DECIMALS } from "@/lib/constants";
+
+const WalletMultiButton = dynamic(
+  () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
+  { ssr: false }
+);
+
+interface Props {
+  mintAddress: string;
+  curve: BondingCurveData;
+  config: GlobalConfigData;
+  onSuccess?: () => void;
+  referrer?: string | null;
+}
+
+type Tab = "buy" | "sell";
+
+function safeBnToFloat(bn: BN, decimals: number): number {
+  const s = bn.toString();
+  if (s.length <= decimals) return parseFloat("0." + s.padStart(decimals, "0"));
+  const whole = s.slice(0, s.length - decimals);
+  const frac = s.slice(s.length - decimals);
+  return parseFloat(whole + "." + frac);
+}
+
+function formatBalance(val: number): string {
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
+  if (val >= 1_000) return `${(val / 1_000).toFixed(2)}K`;
+  return val.toFixed(2);
+}
+
+export default function TradePanel({ mintAddress, curve, config, onSuccess, referrer }: Props) {
+  const { publicKey, wallet, signTransaction, signAllTransactions, connected } = useWallet();
+  const { connection } = useConnection();
+  const [tab, setTab] = useState<Tab>("buy");
+  const [amount, setAmount] = useState("");
+  const [slippageBps, setSlippageBps] = useState(DEFAULT_SLIPPAGE_BPS);
+  const [showSlippage, setShowSlippage] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [txSig, setTxSig] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Wallet balances
+  const [pigeonBalance, setPigeonBalance] = useState<number | null>(null);
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
+  // Fetch wallet balances
+  const fetchBalances = useCallback(async () => {
+    if (!publicKey || !connection) {
+      setPigeonBalance(null);
+      setTokenBalance(null);
+      setSolBalance(null);
+      return;
+    }
+    setBalanceLoading(true);
+    try {
+      const sol = await connection.getBalance(publicKey);
+      setSolBalance(sol / 1e9);
+
+      try {
+        const pigeonAta = getAssociatedTokenAddressSync(PIGEON_MINT, publicKey, false, TOKEN_2022_PROGRAM_ID);
+        const pigeonAcc = await getAccount(connection, pigeonAta, "confirmed", TOKEN_2022_PROGRAM_ID);
+        setPigeonBalance(Number(pigeonAcc.amount) / 10 ** PIGEON_DECIMALS);
+      } catch {
+        setPigeonBalance(0);
+      }
+
+      try {
+        const tokenMint = new PublicKey(mintAddress);
+        const tokenAta = getAssociatedTokenAddressSync(tokenMint, publicKey, false, TOKEN_2022_PROGRAM_ID);
+        const tokenAcc = await getAccount(connection, tokenAta, "confirmed", TOKEN_2022_PROGRAM_ID);
+        setTokenBalance(Number(tokenAcc.amount) / 10 ** TOKEN_DECIMALS);
+      } catch {
+        setTokenBalance(0);
+      }
+    } catch {} finally {
+      setBalanceLoading(false);
+    }
+  }, [publicKey, connection, mintAddress]);
+
+  useEffect(() => { fetchBalances(); }, [fetchBalances]);
+
+  // Refresh balances after successful trade
+  useEffect(() => {
+    if (txSig) {
+      const t = setTimeout(fetchBalances, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [txSig, fetchBalances]);
+
+  const amountNum = useMemo(() => {
+    const n = parseFloat(amount);
+    return isNaN(n) || n <= 0 ? 0 : n;
+  }, [amount]);
+
+  const amountBN = useMemo(() => {
+    if (amountNum <= 0) return null;
+    const decimals = tab === "buy" ? PIGEON_DECIMALS : TOKEN_DECIMALS;
+    return new BN(Math.floor(amountNum * 10 ** decimals));
+  }, [amountNum, tab]);
+
+  const exceedsBalance = useMemo(() => {
+    if (amountNum <= 0) return false;
+    if (tab === "buy") return pigeonBalance !== null && amountNum > pigeonBalance;
+    return tokenBalance !== null && amountNum > tokenBalance;
+  }, [amountNum, tab, pigeonBalance, tokenBalance]);
+
+  const quote = useMemo(() => {
+    if (!amountBN || curve.complete) return null;
+    if (tab === "buy") return getQuoteBuy(curve, amountBN, config.platformFeeBps);
+    return getQuoteSell(curve, amountBN, config.platformFeeBps);
+  }, [amountBN, curve, config, tab]);
+
+  const burnEstimate = useMemo(() => quote?.fee ?? null, [quote]);
+
+  // Price impact
+  const priceImpact = useMemo(() => {
+    if (!amountBN || !quote || amountNum <= 0) return null;
+    const vp = safeBnToFloat(curve.virtualPigeonReserves, PIGEON_DECIMALS);
+    const vt = safeBnToFloat(curve.virtualTokenReserves, TOKEN_DECIMALS);
+    if (vt === 0 || vp === 0) return null;
+    const priceBefore = vp / vt;
+    let priceAfter: number;
+    if (tab === "buy") {
+      const net = safeBnToFloat((quote as any).netPigeon, PIGEON_DECIMALS);
+      const out = safeBnToFloat((quote as any).tokensOut, TOKEN_DECIMALS);
+      priceAfter = (vp + net) / (vt - out);
+    } else {
+      const pigOut = safeBnToFloat((quote as any).pigeonOut, PIGEON_DECIMALS);
+      priceAfter = (vp - pigOut) / (vt + amountNum);
+    }
+    return Math.abs((priceAfter - priceBefore) / priceBefore) * 100;
+  }, [amountBN, quote, curve, tab, amountNum]);
+
+  const handleMax = useCallback(() => {
+    if (tab === "buy" && pigeonBalance !== null && pigeonBalance > 0) {
+      const max = Math.max(0, pigeonBalance - 0.01);
+      setAmount(max > 0 ? max.toFixed(PIGEON_DECIMALS) : "");
+    } else if (tab === "sell" && tokenBalance !== null && tokenBalance > 0) {
+      setAmount(tokenBalance.toFixed(TOKEN_DECIMALS));
+    }
+  }, [tab, pigeonBalance, tokenBalance]);
+
+  const handlePreset = useCallback((pct: number) => {
+    const bal = tab === "buy" ? pigeonBalance : tokenBalance;
+    if (!bal || bal <= 0) return;
+    const decimals = tab === "buy" ? PIGEON_DECIMALS : TOKEN_DECIMALS;
+    setAmount((bal * pct).toFixed(decimals));
+  }, [tab, pigeonBalance, tokenBalance]);
+
+  const handleTrade = useCallback(async () => {
+    if (!publicKey || !amountBN || !wallet || exceedsBalance) return;
+
+    const walletAdapter = {
+      publicKey,
+      signTransaction: signTransaction!,
+      signAllTransactions: signAllTransactions!,
+    } as any;
+
+    setLoading(true);
+    setError(null);
+    setTxSig(null);
+
+    try {
+      const mint = new PublicKey(mintAddress);
+      let sig: string;
+      if (tab === "buy") {
+        sig = await executeBuy(walletAdapter, mint, amountBN, slippageBps, referrer || undefined);
+      } else {
+        sig = await executeSell(walletAdapter, mint, amountBN, slippageBps, referrer || undefined);
+      }
+      setTxSig(sig);
+      setAmount("");
+      onSuccess?.();
+    } catch (err: any) {
+      const msg = err.message || "Transaction failed";
+      if (msg.includes("User rejected")) setError("Unsigned — wallet rejected the transaction");
+      else if (msg.includes("insufficient")) setError("Empty Nest — not enough to complete this offering");
+      else if (msg.includes("Slippage")) setError("Signal Lost — price moved beyond your tolerance");
+      else setError(msg.length > 120 ? msg.slice(0, 120) + "..." : msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [publicKey, amountBN, wallet, tab, mintAddress, slippageBps, signTransaction, signAllTransactions, onSuccess, exceedsBalance, referrer]);
+
+  const isDisabled = !connected || !amountBN || loading || curve.complete || exceedsBalance;
+  const currentBalance = tab === "buy" ? pigeonBalance : tokenBalance;
+  const balanceLabel = tab === "buy" ? "PIGEON" : curve.symbol;
+
+  return (
+    <div className="card p-5">
+      {/* Tabs */}
+      <div className="flex rounded-lg bg-bg-elevated p-[3px] mb-5">
+        {(["buy", "sell"] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => { setTab(t); setAmount(""); setError(null); setTxSig(null); }}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2.5 text-body-sm font-semibold transition-colors ${
+              tab === t
+                ? t === "buy"
+                  ? "bg-teal text-[#F5F0E8]"
+                  : "bg-crimson/15 text-crimson"
+                : "text-txt-muted hover:text-txt-secondary"
+            }`}
+          >
+            {t === "buy" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+            {t === "buy" ? "Buy" : "Sell"}
+          </button>
+        ))}
+      </div>
+
+      {/* Wallet balance bar */}
+      {connected && (
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-1.5 text-caption text-txt-muted">
+            <Wallet className="h-3.5 w-3.5" />
+            <span>Balance:</span>
+            {balanceLoading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <span className="text-txt-secondary font-mono">
+                {currentBalance !== null ? formatBalance(currentBalance) : "—"}
+              </span>
+            )}
+            <span>{balanceLabel}</span>
+          </div>
+          {solBalance !== null && (
+            <span className="text-micro text-txt-muted font-mono">
+              {solBalance.toFixed(3)} SOL
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Input */}
+      <div className={`rounded-xl bg-bg-elevated p-4 mb-2 border transition-colors ${
+        exceedsBalance ? "border-burn/50" : "border-transparent"
+      }`}>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => { setAmount(e.target.value); setError(null); }}
+            className="flex-1 bg-transparent text-xl font-mono text-txt outline-none placeholder:text-txt-muted [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
+            {tab === "buy" ? "PIGEON" : curve.symbol}
+          </span>
+        </div>
+        {exceedsBalance && (
+          <p className="text-caption text-crimson mt-1.5">Insufficient {balanceLabel} balance</p>
+        )}
+      </div>
+
+      {/* Quick amount presets */}
+      {tab === "buy" && (
+        <div className="flex gap-1.5 mb-2">
+          {[10, 50, 100, 500].map((val) => (
+            <button key={val} onClick={() => { setAmount(String(val)); setError(null); }}
+              className="flex-1 rounded-lg bg-bg-elevated py-1.5 text-caption font-mono text-txt-muted hover:text-teal hover:bg-teal/8 border border-transparent hover:border-teal/20 transition-all">
+              {val}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Percent presets + MAX */}
+      {connected && currentBalance !== null && currentBalance > 0 && (
+        <div className="flex gap-1.5 mb-3">
+          {[0.25, 0.5, 0.75].map((pct) => (
+            <button
+              key={pct}
+              onClick={() => handlePreset(pct)}
+              className="flex-1 rounded-lg bg-bg-elevated py-1.5 text-caption font-mono text-txt-muted hover:text-txt hover:bg-border transition-colors"
+            >
+              {pct * 100}%
+            </button>
+          ))}
+          <button
+            onClick={handleMax}
+            className="flex-1 rounded-lg py-1.5 text-caption font-bold text-teal hover:opacity-80 transition-colors"
+            style={{ background: "var(--teal-dim)" }}
+          >
+            MAX
+          </button>
+        </div>
+      )}
+
+      {/* Slippage */}
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={() => setShowSlippage(!showSlippage)}
+          className="flex items-center gap-1 text-caption text-txt-muted hover:text-txt-secondary"
+        >
+          <Settings className="h-3 w-3" />
+          Slippage {slippageBps / 100}%
+        </button>
+      </div>
+
+      {showSlippage && (
+        <div className="flex gap-2 mb-3">
+          {[100, 300, 500, 1000].map((bps) => (
+            <button
+              key={bps}
+              onClick={() => { setSlippageBps(bps); setShowSlippage(false); }}
+              className={`rounded-lg px-3 py-1.5 text-caption font-mono ${
+                slippageBps === bps
+                  ? "bg-teal/15 text-teal border border-teal/30"
+                  : "bg-bg-elevated text-txt-muted hover:text-txt border border-transparent"
+              }`}
+            >
+              {bps / 100}%
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Arrow */}
+      <div className="flex justify-center my-2">
+        <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center">
+          <ArrowDown className="h-4 w-4 text-txt-muted" />
+        </div>
+      </div>
+
+      {/* Output */}
+      <div className="rounded-xl bg-bg-elevated p-4 mb-4">
+        <div className="text-caption text-txt-muted mb-1">You receive</div>
+        <div className="flex items-center gap-2">
+          <span className="flex-1 text-xl font-mono text-txt">
+            {quote
+              ? tab === "buy"
+                ? formatToken((quote as { tokensOut: BN }).tokensOut)
+                : formatPigeon((quote as { netPigeonOut: BN }).netPigeonOut)
+              : "0.00"}
+          </span>
+          <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
+            {tab === "buy" ? curve.symbol : "PIGEON"}
+          </span>
+        </div>
+      </div>
+
+      {/* Trade details */}
+      {quote && amountNum > 0 && (
+        <div className="space-y-2 mb-4">
+          {/* Burn */}
+          {burnEstimate && !burnEstimate.isZero() && (
+            <div className="flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-caption"
+                 style={{ background: "var(--burn-dim)", borderColor: "rgba(255,92,58,0.12)" }}>
+              <Flame className="h-3.5 w-3.5 text-crimson shrink-0" />
+              <span className="text-crimson">
+                <span className="font-mono font-semibold">{formatPigeon(burnEstimate)}</span>
+                {" "}PIGEON burned 🔥
+              </span>
+            </div>
+          )}
+
+          {/* Price impact & fee */}
+          <div className="rounded-xl bg-bg-elevated px-3 py-2 space-y-1">
+            {priceImpact !== null && priceImpact > 0.01 && (
+              <div className="flex justify-between text-caption">
+                <span className="text-txt-muted">Price impact</span>
+                <span className={priceImpact > 5 ? "text-crimson" : priceImpact > 2 ? "text-yellow-400" : "text-txt-muted"}>
+                  {priceImpact.toFixed(2)}%
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between text-caption">
+              <span className="text-txt-muted">Trade fee</span>
+              <span className="text-txt-muted">2% · burns PIGEON 🔥</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action button */}
+      {!connected ? (
+        <WalletMultiButton className="!w-full !justify-center" />
+      ) : (
+        <button
+          onClick={handleTrade}
+          disabled={isDisabled}
+          className={`w-full rounded-xl py-3.5 text-body-sm font-bold transition-all ${
+            isDisabled
+              ? "bg-border text-txt-muted cursor-not-allowed"
+              : tab === "buy"
+              ? "bg-teal text-[#F5F0E8] shadow-glow hover:opacity-90"
+              : "bg-crimson/15 text-crimson hover:bg-burn/30"
+          }`}
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Confirming...
+            </span>
+          ) : curve.complete ? (
+            "Curve Graduated"
+          ) : exceedsBalance ? (
+            `Insufficient ${balanceLabel}`
+          ) : !amountBN ? (
+            "Enter amount"
+          ) : tab === "buy" ? (
+            `Buy ${curve.symbol}`
+          ) : (
+            `Sell ${curve.symbol}`
+          )}
+        </button>
+      )}
+
+      {/* Feedback */}
+      {error && <p className="mt-3 text-caption text-crimson text-center">{error}</p>}
+      {txSig && (
+        <div className="mt-3 text-center">
+          <p className="text-caption text-success">
+            Mark Sealed —{" "}
+            <a
+              href={`https://solscan.io/tx/${txSig}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-80"
+            >
+              View on Solscan →
+            </a>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
