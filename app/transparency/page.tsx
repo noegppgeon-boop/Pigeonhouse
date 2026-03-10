@@ -8,10 +8,11 @@ import {
   FileText, Hash, Clock
 } from "lucide-react";
 import { usePlatformStats } from "@/hooks/usePlatformStats";
+import { useReserves } from "@/hooks/useReserves";
 import { formatNumber } from "@/lib/utils";
 import { SECTION_HEADERS, ARCHIVE_CARDS, BURN_RITUAL, INVARIANTS, EMPTY_STATES, LOADING_STATES } from "@/lib/lore";
 
-type Tab = "overview" | "sweeps" | "accruals";
+type Tab = "overview" | "sweeps" | "accruals" | "reserves";
 
 /* ── Lore archive card data ── */
 const LORE_CARDS = [
@@ -22,6 +23,7 @@ const LORE_CARDS = [
 
 export default function TransparencyPage() {
   const { stats, loading } = usePlatformStats();
+  const { data: reserveData, loading: reserveLoading } = useReserves();
   const [tab, setTab] = useState<Tab>("overview");
 
   const burned = stats?.totalPigeonBurned ? formatNumber(stats.totalPigeonBurned.toNumber() / 1e6) : "—";
@@ -104,6 +106,7 @@ export default function TransparencyPage() {
           { key: "overview" as Tab, label: "Overview", icon: Eye },
           { key: "sweeps" as Tab, label: "Sweep Log", icon: Zap },
           { key: "accruals" as Tab, label: "Accrual Feed", icon: TrendingUp },
+          { key: "reserves" as Tab, label: "Reserves", icon: Shield },
         ]).map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-md text-[12px] font-semibold whitespace-nowrap transition-all border ${
@@ -249,6 +252,101 @@ export default function TransparencyPage() {
               <p>After graduation, the <span className="font-mono text-txt-secondary">TransferHook</span> activates on each token.</p>
               <p>Every <span className="font-mono text-txt-secondary">transfer_checked</span> call triggers the hook which accrues 0.25% into the token&apos;s <span className="font-mono text-txt-secondary">FeeAccrualVault</span>.</p>
               <p>Accruals are passive — they happen automatically on every transfer without reverting.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "reserves" && (
+        <div className="space-y-4">
+          {/* Reserve Overview */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[12px] font-semibold text-txt-secondary flex items-center gap-2">
+                <Shield className="h-3.5 w-3.5 text-purple-400" />
+                Strategic Reserves
+              </h3>
+              <span className="text-[10px] font-mono text-txt-muted">MULTI-QUOTE</span>
+            </div>
+            <p className="text-[11px] text-txt-muted mb-4">
+              Non-PIGEON quote assets (SOL, SKR) accumulate strategic reserves from trade fees.
+              These reserves fund ecosystem growth, liquidity, and grants.
+            </p>
+
+            <div className="space-y-3">
+              {([
+                { key: "sol", icon: "◎", label: "SOL Reserve", color: "purple", decimals: 9, feePct: "0.5%" },
+                { key: "skr", icon: "🔮", label: "SKR Reserve", color: "teal", decimals: 6, feePct: "0.5%" },
+              ] as const).map(({ key, icon, label, color, decimals, feePct }) => {
+                const rv = reserveData?.reserves?.[key];
+                const fmt = (v: string | undefined) => v ? (parseInt(v) / 10 ** decimals).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0";
+                return (
+                  <div key={key} className={`rounded-lg bg-${color}-500/5 border border-${color}-500/15 p-4`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-[12px] font-semibold text-${color}-400 flex items-center gap-1.5`}>
+                        <span>{icon}</span> {label}
+                      </span>
+                      <span className="text-[10px] text-txt-muted font-mono">{feePct} of {key.toUpperCase()} trades</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-[10px] text-txt-muted">Accrued</div>
+                        <div className="text-[13px] font-mono text-txt">{rv ? fmt(rv.totalAccrued) : "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-txt-muted">Withdrawn</div>
+                        <div className="text-[13px] font-mono text-txt">{rv ? fmt(rv.totalWithdrawn) : "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-txt-muted">Balance</div>
+                        <div className={`text-[13px] font-mono text-${color}-400`}>{rv ? fmt(rv.balance) : "—"}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Burn Accrual Vaults */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[12px] font-semibold text-txt-secondary flex items-center gap-2">
+                <Flame className="h-3.5 w-3.5 text-crimson" />
+                Burn Accrual Vaults
+              </h3>
+              <span className="text-[10px] font-mono text-txt-muted">SWEEP → BURN</span>
+            </div>
+            <p className="text-[11px] text-txt-muted mb-3">
+              Non-PIGEON burn fees accrue here. A cranker periodically sweeps, swaps to PIGEON, and burns.
+            </p>
+
+            <div className="space-y-2">
+              {([
+                { key: "sol", icon: "◎", symbol: "SOL", decimals: 9 },
+                { key: "skr", icon: "🔮", symbol: "SKR", decimals: 6 },
+              ] as const).map(({ key, icon, symbol, decimals }) => {
+                const ba = reserveData?.burnAccruals?.[key];
+                const val = ba ? (parseInt(ba.balance) / 10 ** decimals).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—";
+                return (
+                  <div key={key} className="flex items-center justify-between rounded-lg bg-bg-elevated p-3">
+                    <span className="text-[11px] text-txt-muted">{icon} {symbol} Burn Accrual</span>
+                    <span className="text-[12px] font-mono text-txt">{val} {symbol}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Reserve explainer */}
+          <div className="card p-4">
+            <h4 className="text-[11px] font-semibold text-txt-secondary uppercase tracking-wider mb-2">How It Works</h4>
+            <div className="space-y-2 text-[11px] text-txt-muted">
+              <p>When tokens are launched with <span className="font-mono text-purple-400">SOL</span> or <span className="font-mono text-teal-400">SKR</span> as quote asset, trade fees split into lanes:</p>
+              <p>• <span className="font-mono text-crimson">Burn lane</span> — accrues to BurnAccrualVault, periodically swept → swapped to PIGEON → burned</p>
+              <p>• <span className="font-mono text-purple-400">Reserve lane</span> — accrues to StrategicReserveVault for ecosystem use</p>
+              <p>• <span className="font-mono text-txt-secondary">Treasury lane</span> — sent to protocol treasury</p>
+              <p>All vaults are on-chain PDAs — verifiable, transparent, immutable.</p>
             </div>
           </div>
         </div>

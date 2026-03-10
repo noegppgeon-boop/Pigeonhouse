@@ -49,6 +49,32 @@ export function getATA(
   return getAssociatedTokenAddressSync(mint, owner, true, programId);
 }
 
+// ── Quote Asset PDAs ──
+
+export function getQuoteAssetConfigPDA(quoteMint: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("quote_asset"), quoteMint.toBuffer()],
+    PIGEON_HOUSE_PROGRAM_ID
+  );
+  return pda;
+}
+
+export function getStrategicReservePDA(quoteMint: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("strategic_reserve"), quoteMint.toBuffer()],
+    PIGEON_HOUSE_PROGRAM_ID
+  );
+  return pda;
+}
+
+export function getBurnAccrualPDA(quoteMint: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("burn_accrual"), quoteMint.toBuffer()],
+    PIGEON_HOUSE_PROGRAM_ID
+  );
+  return pda;
+}
+
 // ── Hook Program PDAs ──
 
 export function getHookConfigPDA(): PublicKey {
@@ -74,3 +100,5 @@ export function getExtraAccountMetasPDA(tokenMint: PublicKey): PublicKey {
   );
   return pda;
 }
+
+

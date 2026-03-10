@@ -18,6 +18,7 @@ import { formatPigeon, formatToken } from "@/lib/pigeon_house";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { formatNumber, shortenAddress, timeAgo } from "@/lib/utils";
 import { useTokenImage } from "@/hooks/useTokenImage";
+import { QuoteBadge } from "@/components/shared/QuoteBadge";
 import BN from "bn.js";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
@@ -133,7 +134,10 @@ export default function TokenPage() {
           )}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5 flex-wrap mb-1">
-              <h1 className="text-[20px] font-bold text-txt leading-tight tracking-tight">{curve.name}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-[20px] font-bold text-txt leading-tight tracking-tight">{curve.name}</h1>
+                <QuoteBadge quoteMint={curve.quoteMint?.toBase58?.()} compact />
+              </div>
               <span className="text-[12px] font-mono text-txt-muted">${curve.symbol}</span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border ${status.bg} ${status.color}`}>
                 {isComplete ? <Award className="h-2.5 w-2.5" /> : <Flame className="h-2.5 w-2.5" />}

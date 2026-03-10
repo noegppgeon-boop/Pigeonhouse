@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Flame, TrendingUp, Award } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
 import { useTokenImage } from "@/hooks/useTokenImage";
+import { QuoteBadge } from "@/components/shared/QuoteBadge";
 import BN from "bn.js";
 
 interface TokenCardProps {
@@ -55,6 +56,7 @@ export default function TokenCard({ mintAddress, curve, graduationAmount, index 
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-micro text-txt-muted font-mono">${symbol}</span>
+                <QuoteBadge quoteMint={curve.quoteMint?.toBase58?.()} compact />
                 {price > 0 && (
                   <span className="text-micro text-txt-secondary font-mono">
                     {price < 0.001 ? price.toExponential(2) : price.toFixed(6)}

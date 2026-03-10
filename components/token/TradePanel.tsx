@@ -17,7 +17,7 @@ import {
 } from "@/lib/pigeon_house";
 import { PublicKey } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, getAccount } from "@solana/spl-token";
-import { DEFAULT_SLIPPAGE_BPS, PIGEON_DECIMALS, PIGEON_MINT, TOKEN_DECIMALS } from "@/lib/constants";
+import { DEFAULT_SLIPPAGE_BPS, PIGEON_DECIMALS, PIGEON_MINT, TOKEN_DECIMALS, getQuoteKeyByMint, getQuoteAssetByMint, QUOTE_ASSETS, type QuoteAssetKey } from "@/lib/constants";
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
@@ -53,6 +53,13 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   const { connection } = useConnection();
   const [tab, setTab] = useState<Tab>("buy");
   const [amount, setAmount] = useState("");
+
+  // Quote asset info
+  const quoteMintStr = curve.quoteMint?.toBase58?.() ?? PIGEON_MINT.toBase58();
+  const quoteKey = getQuoteKeyByMint(quoteMintStr) ?? "pigeon";
+  const quoteAsset = QUOTE_ASSETS[quoteKey];
+  const quoteSymbol = quoteAsset.symbol;
+  const quoteDecimals = quoteAsset.decimals;
   const [slippageBps, setSlippageBps] = useState(DEFAULT_SLIPPAGE_BPS);
   const [showSlippage, setShowSlippage] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,15 +67,15 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   const [error, setError] = useState<string | null>(null);
 
   // Wallet balances
-  const [pigeonBalance, setPigeonBalance] = useState<number | null>(null);
+  const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [solBalance, setSolBalance] = useState<number | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  // Fetch wallet balances
+  // Fetch wallet balances (quote-aware)
   const fetchBalances = useCallback(async () => {
     if (!publicKey || !connection) {
-      setPigeonBalance(null);
+      setQuoteBalance(null);
       setTokenBalance(null);
       setSolBalance(null);
       return;
@@ -78,12 +85,19 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
       const sol = await connection.getBalance(publicKey);
       setSolBalance(sol / 1e9);
 
+      // Quote asset balance (PIGEON/SOL/SKR)
       try {
-        const pigeonAta = getAssociatedTokenAddressSync(PIGEON_MINT, publicKey, false, TOKEN_2022_PROGRAM_ID);
-        const pigeonAcc = await getAccount(connection, pigeonAta, "confirmed", TOKEN_2022_PROGRAM_ID);
-        setPigeonBalance(Number(pigeonAcc.amount) / 10 ** PIGEON_DECIMALS);
+        const quoteMintPubkey = new PublicKey(quoteMintStr);
+        if (quoteKey === "sol") {
+          // For SOL quote, use native SOL balance (will be wrapped on trade)
+          setQuoteBalance(sol / 1e9);
+        } else {
+          const quoteAta = getAssociatedTokenAddressSync(quoteMintPubkey, publicKey, false, quoteAsset.tokenProgram);
+          const quoteAcc = await getAccount(connection, quoteAta, "confirmed", quoteAsset.tokenProgram);
+          setQuoteBalance(Number(quoteAcc.amount) / 10 ** quoteDecimals);
+        }
       } catch {
-        setPigeonBalance(0);
+        setQuoteBalance(0);
       }
 
       try {
@@ -97,7 +111,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
     } catch {} finally {
       setBalanceLoading(false);
     }
-  }, [publicKey, connection, mintAddress]);
+  }, [publicKey, connection, mintAddress, quoteMintStr, quoteKey, quoteAsset, quoteDecimals]);
 
   useEffect(() => { fetchBalances(); }, [fetchBalances]);
 
@@ -116,15 +130,15 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
 
   const amountBN = useMemo(() => {
     if (amountNum <= 0) return null;
-    const decimals = tab === "buy" ? PIGEON_DECIMALS : TOKEN_DECIMALS;
+    const decimals = tab === "buy" ? quoteDecimals : TOKEN_DECIMALS;
     return new BN(Math.floor(amountNum * 10 ** decimals));
   }, [amountNum, tab]);
 
   const exceedsBalance = useMemo(() => {
     if (amountNum <= 0) return false;
-    if (tab === "buy") return pigeonBalance !== null && amountNum > pigeonBalance;
+    if (tab === "buy") return quoteBalance !== null && amountNum > quoteBalance;
     return tokenBalance !== null && amountNum > tokenBalance;
-  }, [amountNum, tab, pigeonBalance, tokenBalance]);
+  }, [amountNum, tab, quoteBalance, tokenBalance]);
 
   const quote = useMemo(() => {
     if (!amountBN || curve.complete) return null;
@@ -137,37 +151,37 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   // Price impact
   const priceImpact = useMemo(() => {
     if (!amountBN || !quote || amountNum <= 0) return null;
-    const vp = safeBnToFloat(curve.virtualPigeonReserves, PIGEON_DECIMALS);
+    const vp = safeBnToFloat(curve.virtualPigeonReserves, quoteDecimals);
     const vt = safeBnToFloat(curve.virtualTokenReserves, TOKEN_DECIMALS);
     if (vt === 0 || vp === 0) return null;
     const priceBefore = vp / vt;
     let priceAfter: number;
     if (tab === "buy") {
-      const net = safeBnToFloat((quote as any).netPigeon, PIGEON_DECIMALS);
+      const net = safeBnToFloat((quote as any).netPigeon, quoteDecimals);
       const out = safeBnToFloat((quote as any).tokensOut, TOKEN_DECIMALS);
       priceAfter = (vp + net) / (vt - out);
     } else {
-      const pigOut = safeBnToFloat((quote as any).pigeonOut, PIGEON_DECIMALS);
+      const pigOut = safeBnToFloat((quote as any).pigeonOut, quoteDecimals);
       priceAfter = (vp - pigOut) / (vt + amountNum);
     }
     return Math.abs((priceAfter - priceBefore) / priceBefore) * 100;
   }, [amountBN, quote, curve, tab, amountNum]);
 
   const handleMax = useCallback(() => {
-    if (tab === "buy" && pigeonBalance !== null && pigeonBalance > 0) {
-      const max = Math.max(0, pigeonBalance - 0.01);
-      setAmount(max > 0 ? max.toFixed(PIGEON_DECIMALS) : "");
+    if (tab === "buy" && quoteBalance !== null && quoteBalance > 0) {
+      const max = Math.max(0, quoteBalance - 0.01);
+      setAmount(max > 0 ? max.toFixed(quoteDecimals) : "");
     } else if (tab === "sell" && tokenBalance !== null && tokenBalance > 0) {
       setAmount(tokenBalance.toFixed(TOKEN_DECIMALS));
     }
-  }, [tab, pigeonBalance, tokenBalance]);
+  }, [tab, quoteBalance, tokenBalance]);
 
   const handlePreset = useCallback((pct: number) => {
-    const bal = tab === "buy" ? pigeonBalance : tokenBalance;
+    const bal = tab === "buy" ? quoteBalance : tokenBalance;
     if (!bal || bal <= 0) return;
-    const decimals = tab === "buy" ? PIGEON_DECIMALS : TOKEN_DECIMALS;
+    const decimals = tab === "buy" ? quoteDecimals : TOKEN_DECIMALS;
     setAmount((bal * pct).toFixed(decimals));
-  }, [tab, pigeonBalance, tokenBalance]);
+  }, [tab, quoteBalance, tokenBalance]);
 
   const handleTrade = useCallback(async () => {
     if (!publicKey || !amountBN || !wallet || exceedsBalance) return;
@@ -205,8 +219,8 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   }, [publicKey, amountBN, wallet, tab, mintAddress, slippageBps, signTransaction, signAllTransactions, onSuccess, exceedsBalance, referrer]);
 
   const isDisabled = !connected || !amountBN || loading || curve.complete || exceedsBalance;
-  const currentBalance = tab === "buy" ? pigeonBalance : tokenBalance;
-  const balanceLabel = tab === "buy" ? "PIGEON" : curve.symbol;
+  const currentBalance = tab === "buy" ? quoteBalance : tokenBalance;
+  const balanceLabel = tab === "buy" ? quoteSymbol : curve.symbol;
 
   return (
     <div className="card p-5">
@@ -266,7 +280,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             className="flex-1 bg-transparent text-xl font-mono text-txt outline-none placeholder:text-txt-muted [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
           <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
-            {tab === "buy" ? "PIGEON" : curve.symbol}
+            {tab === "buy" ? quoteSymbol : curve.symbol}
           </span>
         </div>
         {exceedsBalance && (
@@ -356,7 +370,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
               : "0.00"}
           </span>
           <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
-            {tab === "buy" ? curve.symbol : "PIGEON"}
+            {tab === "buy" ? curve.symbol : quoteSymbol}
           </span>
         </div>
       </div>
@@ -388,7 +402,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             )}
             <div className="flex justify-between text-caption">
               <span className="text-txt-muted">Trade fee</span>
-              <span className="text-txt-muted">2% · burns PIGEON 🔥</span>
+              <span className="text-txt-muted">2% · burns PIGEON</span>
             </div>
           </div>
         </div>

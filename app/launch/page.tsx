@@ -14,9 +14,11 @@ import BN from "bn.js";
 import Link from "next/link";
 import { executeCreateToken } from "@/lib/pigeon_house";
 import { uploadTokenAssets } from "@/lib/upload";
-import { PIGEON_DECIMALS, BURN_FEE_BPS, TREASURY_FEE_BPS } from "@/lib/constants";
+import { PIGEON_DECIMALS, BURN_FEE_BPS, TREASURY_FEE_BPS, type QuoteAssetKey, QUOTE_ASSETS } from "@/lib/constants";
 import { shortenAddress } from "@/lib/utils";
-import { SECTION_HEADERS, LAUNCH_COPY, RESULT_COPY, HOW_IT_WORKS } from "@/lib/lore";
+import { SECTION_HEADERS, LAUNCH_COPY, RESULT_COPY, HOW_IT_WORKS, QUOTE_LORE } from "@/lib/lore";
+import { QuoteSelector } from "@/components/launch/QuoteSelector";
+import { FeeBreakdown } from "@/components/token/FeeBreakdown";
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
@@ -43,6 +45,7 @@ export default function LaunchPage() {
   const [website, setWebsite] = useState("");
   const [initialBuy, setInitialBuy] = useState("");
   const [doInitialBuy, setDoInitialBuy] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<QuoteAssetKey>("pigeon");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +100,8 @@ export default function LaunchPage() {
         }
       }
 
-      const { txSig, tokenMint } = await executeCreateToken(walletAdapter, name.trim(), symbol.trim(), uri, initialBuyBN);
+      const quoteMintPubkey = QUOTE_ASSETS[selectedQuote].mint;
+      const { txSig, tokenMint } = await executeCreateToken(walletAdapter, name.trim(), symbol.trim(), uri, initialBuyBN, quoteMintPubkey);
       setSuccessData({ txSig, mint: tokenMint.toBase58() });
       setStep("success");
     } catch (err: any) {
@@ -192,6 +196,12 @@ export default function LaunchPage() {
               {step === "details" && (
                 <StepContent key="details" title={LAUNCH_COPY.detailsTitle} lore={LAUNCH_COPY.detailsLore}>
                   <div className="space-y-4">
+                    {/* Quote Asset Selection */}
+                    <QuoteSelector selected={selectedQuote} onSelect={setSelectedQuote} />
+
+                    {/* Fee Preview */}
+                    <FeeBreakdown quote={selectedQuote} className="p-3 rounded-lg bg-white/5 border border-white/10" />
+
                     {/* Name + Symbol */}
                     <div className="grid grid-cols-5 gap-3">
                       <div className="col-span-3">

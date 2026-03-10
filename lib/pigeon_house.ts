@@ -13,6 +13,7 @@ import {
   RPC_URL,
   TOKEN_DECIMALS,
   PIGEON_DECIMALS,
+  getQuoteAssetByMint,
 } from "./constants";
 import {
   getGlobalConfigPDA,
@@ -23,6 +24,7 @@ import {
   getHookConfigPDA,
   getFeeAccrualVaultPDA,
   getExtraAccountMetasPDA,
+  getQuoteAssetConfigPDA,
 } from "./pda";
 
 // ── IDL (loaded at runtime) ──
@@ -93,6 +95,7 @@ export interface GlobalConfigData {
 export interface BondingCurveData {
   tokenMint: PublicKey;
   creator: PublicKey;
+  quoteMint?: PublicKey;
   virtualPigeonReserves: BN;
   virtualTokenReserves: BN;
   realPigeonReserves: BN;
@@ -244,7 +247,7 @@ export function getProgressPercent(
 export async function executeBuy(
   wallet: anchor.Wallet,
   tokenMint: PublicKey,
-  pigeonAmountIn: BN,
+  quoteAmountIn: BN,
   slippageBps: number,
   referrer?: string
 ): Promise<string> {
@@ -255,42 +258,70 @@ export async function executeBuy(
   const config = await getGlobalConfig();
   if (!config) throw new Error("GlobalConfig not found");
 
-  const { tokensOut } = getQuoteBuy(curve, pigeonAmountIn, config.platformFeeBps);
+  // Determine quote asset
+  const quoteMintKey = curve.quoteMint ?? PIGEON_MINT;
+  const quoteAsset = getQuoteAssetByMint(quoteMintKey.toBase58());
+  const quoteTokenProgram = quoteAsset?.tokenProgram ?? TOKEN_2022_PROGRAM_ID;
+  const isPigeon = quoteMintKey.equals(PIGEON_MINT);
+
+  const { tokensOut } = getQuoteBuy(curve, quoteAmountIn, config.platformFeeBps);
   const minTokensOut = tokensOut.mul(new BN(10_000 - slippageBps)).div(new BN(10_000));
 
   const bondingCurve = getBondingCurvePDA(tokenMint);
   const feeVault = getFeeVaultPDA();
+  const quoteConfigPDA = getQuoteAssetConfigPDA(quoteMintKey);
 
-  // Build remaining accounts for referrer
-  const remainingAccounts = referrer
-    ? [{ pubkey: getATA(new PublicKey(referrer), PIGEON_MINT), isWritable: true, isSigner: false }]
-    : [];
+  // Build remaining accounts
+  const remainingAccounts: { pubkey: PublicKey; isWritable: boolean; isSigner: boolean }[] = [];
 
-  // Pre-create buyer's token ATA (required for Token-2022 — account must exist before transfer)
+  // Referrer (optional)
+  if (referrer) {
+    remainingAccounts.push({ pubkey: getATA(new PublicKey(referrer), quoteMintKey, quoteTokenProgram), isWritable: true, isSigner: false });
+  }
+
+  // Non-PIGEON quotes need reserve + burn accrual vaults
+  if (!isPigeon) {
+    const { getBurnAccrualPDA, getStrategicReservePDA } = await import("./pda");
+    const reserveVault = getStrategicReservePDA(quoteMintKey);
+    const reserveVaultAta = getATA(reserveVault, quoteMintKey, quoteTokenProgram);
+    const burnVault = getBurnAccrualPDA(quoteMintKey);
+    const burnVaultAta = getATA(burnVault, quoteMintKey, quoteTokenProgram);
+
+    remainingAccounts.push(
+      { pubkey: reserveVault, isWritable: true, isSigner: false },
+      { pubkey: reserveVaultAta, isWritable: true, isSigner: false },
+      { pubkey: burnVault, isWritable: true, isSigner: false },
+      { pubkey: burnVaultAta, isWritable: true, isSigner: false },
+    );
+  }
+
+  // Pre-create buyer's token ATA (required for Token-2022)
   const buyerTokenAta = getATA(wallet.publicKey, tokenMint);
   const createBuyerTokenAtaIx = createAssociatedTokenAccountIdempotentInstruction(
     wallet.publicKey, buyerTokenAta, wallet.publicKey, tokenMint, TOKEN_2022_PROGRAM_ID
   );
 
   return await program.methods
-    .buy(pigeonAmountIn, minTokensOut)
+    .buy(quoteAmountIn, minTokensOut)
     .preInstructions([createBuyerTokenAtaIx])
     .accounts({
       buyer: wallet.publicKey,
       globalConfig: getGlobalConfigPDA(),
       bondingCurve,
+      quoteConfig: quoteConfigPDA,
       feeVault: feeVault,
       tokenMint,
-      bondingCurvePigeonVault: getATA(bondingCurve, PIGEON_MINT),
+      quoteMint: quoteMintKey,
+      bondingCurveQuoteVault: getATA(bondingCurve, quoteMintKey, quoteTokenProgram),
       bondingCurveTokenVault: getATA(bondingCurve, tokenMint),
-      feeVaultPigeonAta: getATA(feeVault, PIGEON_MINT),
-      buyerPigeonAta: getATA(wallet.publicKey, PIGEON_MINT),
+      buyerQuoteAta: getATA(wallet.publicKey, quoteMintKey, quoteTokenProgram),
       buyerTokenAta: getATA(wallet.publicKey, tokenMint),
-      treasuryPigeonAta: getATA(config.treasury, PIGEON_MINT),
+      treasuryQuoteAta: getATA(config.treasury, quoteMintKey, quoteTokenProgram),
       pigeonMint: PIGEON_MINT,
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      quoteTokenProgram,
     })
     .remainingAccounts(remainingAccounts)
     .rpc();
@@ -310,33 +341,59 @@ export async function executeSell(
   const config = await getGlobalConfig();
   if (!config) throw new Error("GlobalConfig not found");
 
+  // Determine quote asset
+  const quoteMintKey = curve.quoteMint ?? PIGEON_MINT;
+  const quoteAsset = getQuoteAssetByMint(quoteMintKey.toBase58());
+  const quoteTokenProgram = quoteAsset?.tokenProgram ?? TOKEN_2022_PROGRAM_ID;
+  const isPigeon = quoteMintKey.equals(PIGEON_MINT);
+
   const { netPigeonOut } = getQuoteSell(curve, tokenAmountIn, config.platformFeeBps);
-  const minPigeonOut = netPigeonOut.mul(new BN(10_000 - slippageBps)).div(new BN(10_000));
+  const minQuoteOut = netPigeonOut.mul(new BN(10_000 - slippageBps)).div(new BN(10_000));
 
   const bondingCurve = getBondingCurvePDA(tokenMint);
   const feeVault = getFeeVaultPDA();
+  const quoteConfigPDA = getQuoteAssetConfigPDA(quoteMintKey);
 
-  // Build remaining accounts for referrer
-  const remainingAccounts = referrer
-    ? [{ pubkey: getATA(new PublicKey(referrer), PIGEON_MINT), isWritable: true, isSigner: false }]
-    : [];
+  // Build remaining accounts
+  const remainingAccounts: { pubkey: PublicKey; isWritable: boolean; isSigner: boolean }[] = [];
+
+  if (referrer) {
+    remainingAccounts.push({ pubkey: getATA(new PublicKey(referrer), quoteMintKey, quoteTokenProgram), isWritable: true, isSigner: false });
+  }
+
+  if (!isPigeon) {
+    const { getBurnAccrualPDA, getStrategicReservePDA } = await import("./pda");
+    const reserveVault = getStrategicReservePDA(quoteMintKey);
+    const reserveVaultAta = getATA(reserveVault, quoteMintKey, quoteTokenProgram);
+    const burnVault = getBurnAccrualPDA(quoteMintKey);
+    const burnVaultAta = getATA(burnVault, quoteMintKey, quoteTokenProgram);
+
+    remainingAccounts.push(
+      { pubkey: reserveVault, isWritable: true, isSigner: false },
+      { pubkey: reserveVaultAta, isWritable: true, isSigner: false },
+      { pubkey: burnVault, isWritable: true, isSigner: false },
+      { pubkey: burnVaultAta, isWritable: true, isSigner: false },
+    );
+  }
 
   return await program.methods
-    .sell(tokenAmountIn, minPigeonOut)
+    .sell(tokenAmountIn, minQuoteOut)
     .accounts({
       seller: wallet.publicKey,
       globalConfig: getGlobalConfigPDA(),
       bondingCurve,
+      quoteConfig: quoteConfigPDA,
       feeVault: feeVault,
       tokenMint,
-      bondingCurvePigeonVault: getATA(bondingCurve, PIGEON_MINT),
+      quoteMint: quoteMintKey,
+      bondingCurveQuoteVault: getATA(bondingCurve, quoteMintKey, quoteTokenProgram),
       bondingCurveTokenVault: getATA(bondingCurve, tokenMint),
-      feeVaultPigeonAta: getATA(feeVault, PIGEON_MINT),
-      sellerPigeonAta: getATA(wallet.publicKey, PIGEON_MINT),
+      sellerQuoteAta: getATA(wallet.publicKey, quoteMintKey, quoteTokenProgram),
       sellerTokenAta: getATA(wallet.publicKey, tokenMint),
-      treasuryPigeonAta: getATA(config.treasury, PIGEON_MINT),
+      treasuryQuoteAta: getATA(config.treasury, quoteMintKey, quoteTokenProgram),
       pigeonMint: PIGEON_MINT,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
+      quoteTokenProgram,
     })
     .remainingAccounts(remainingAccounts)
     .rpc();
@@ -349,10 +406,17 @@ export async function executeCreateToken(
   name: string,
   symbol: string,
   uri: string,
-  initialBuyPigeon?: BN
+  initialBuyPigeon?: BN,
+  quoteMint?: PublicKey
 ): Promise<{ txSig: string; tokenMint: PublicKey }> {
   const program = await getProgram(wallet);
   const connection = getConnection();
+
+  // Quote asset — default to PIGEON
+  const effectiveQuoteMint = quoteMint ?? PIGEON_MINT;
+  const quoteAsset = getQuoteAssetByMint(effectiveQuoteMint.toBase58());
+  const quoteTokenProgram = quoteAsset?.tokenProgram ?? TOKEN_2022_PROGRAM_ID;
+  const quoteConfigPDA = getQuoteAssetConfigPDA(effectiveQuoteMint);
 
   // Generate new token mint keypair
   const tokenMint = Keypair.generate();
@@ -379,20 +443,24 @@ export async function executeCreateToken(
     .createToken(name, symbol, uri, initialBuy)
     .accounts({
       creator: wallet.publicKey,
+      globalConfig: getGlobalConfigPDA(),
+      quoteConfig: quoteConfigPDA,
       tokenMint: tokenMint.publicKey,
-      bondingCurvePigeonVault: getATA(bondingCurve, PIGEON_MINT),
+      bondingCurve,
+      bondingCurveQuoteVault: getATA(bondingCurve, effectiveQuoteMint, quoteTokenProgram),
       bondingCurveTokenVault: getATA(bondingCurve, tokenMint.publicKey),
+      quoteMint: effectiveQuoteMint,
       pigeonMint: PIGEON_MINT,
-      // Skip Metaplex metadata (incompatible with Token-2022)
       metadata: SystemProgram.programId,
       metadataProgram: SystemProgram.programId,
-      creatorPigeonAta: getATA(wallet.publicKey, PIGEON_MINT),
+      creatorQuoteAta: getATA(wallet.publicKey, effectiveQuoteMint, quoteTokenProgram),
       creatorTokenAta: getATA(wallet.publicKey, tokenMint.publicKey),
       feeVaultPigeonAta: getATA(feeVault, PIGEON_MINT),
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
+      quoteTokenProgram,
     })
     .preInstructions([createMintIx])
     .signers([tokenMint])

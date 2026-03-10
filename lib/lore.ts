@@ -64,6 +64,40 @@ export const LORE_NAMES = {
 } as const;
 
 /* ═══════════════════════════════════════
+   QUOTE LORE — per-quote-asset flavor text
+   ═══════════════════════════════════════ */
+
+export const QUOTE_LORE = {
+  pigeon: {
+    label:      "PIGEON",
+    tagline:    "Burn-native. Every trade feeds the fire.",
+    feeNote:    "All fees burn PIGEON directly — the purest path",
+    desc:       "The original rail. Trade fees are instantly burned, reducing supply with every transaction.",
+    cta:        "Inscribe with fire",
+    graduation: "~2.36M PIGEON threshold",
+    ritual:     "PIGEON burned atomically in every trade",
+  },
+  sol: {
+    label:      "SOL",
+    tagline:    "Reserve-backed. Building the war chest.",
+    feeNote:    "Fees split between PIGEON burn and SOL reserve",
+    desc:       "Launch with SOL liquidity. A portion of fees build a strategic reserve, the rest fuels the burn.",
+    cta:        "Forge with SOL",
+    graduation: "~70 SOL threshold",
+    ritual:     "SOL accrued, swept to PIGEON, then burned",
+  },
+  skr: {
+    label:      "SKR",
+    tagline:    "Strategic reserves. Long-term alignment.",
+    feeNote:    "Fees split between PIGEON burn and SKR reserve",
+    desc:       "Align with the SKR ecosystem. Fees fund both the burn engine and a strategic SKR reserve.",
+    cta:        "Seal with SKR",
+    graduation: "~2.36M SKR threshold",
+    ritual:     "SKR accrued, swept to PIGEON, then burned",
+  },
+} as const;
+
+/* ═══════════════════════════════════════
    STATUS BADGES
    ═══════════════════════════════════════ */
 
@@ -282,3 +316,5 @@ export const ABOUT = {
   description: "Where tokens are inscribed, burned, and witnessed. A deflation engine for the flock.",
   mission:     "Every trade burns. Every sweep seals. The archive remembers.",
 } as const;
+
+

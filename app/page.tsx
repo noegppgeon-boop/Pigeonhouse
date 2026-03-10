@@ -16,6 +16,8 @@ import { SECTION_HEADERS, EMPTY_STATES, SEARCH_COPY } from "@/lib/lore";
 import { Search, Eye } from "lucide-react";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { QuoteFilter } from "@/components/shared/QuoteFilter";
+import { type QuoteAssetKey, QUOTE_ASSETS } from "@/lib/constants";
 
 type TabKey = "new" | "heating" | "graduating" | "burn" | "volume" | "watched";
 
@@ -40,6 +42,7 @@ export default function Board() {
   const { stats, loading } = usePlatformStats();
   const [activeTab, setActiveTab] = useState<TabKey>("new");
   const [searchQuery, setSearchQuery] = useState("");
+  const [quoteFilter, setQuoteFilter] = useState<QuoteAssetKey | "all">("all");
   const { watchlist, toggle: toggleWatch, isWatched } = useWatchlist();
   const { items: recentlyViewed } = useRecentlyViewed();
 
@@ -75,6 +78,13 @@ export default function Board() {
         return items;
     }
   })().filter((item) => {
+    // Quote filter
+    if (quoteFilter !== "all") {
+      const itemQuoteMint = item.account.quoteMint?.toBase58?.() ?? "";
+      const expectedMint = QUOTE_ASSETS[quoteFilter]?.mint.toBase58() ?? "";
+      if (itemQuoteMint !== expectedMint) return false;
+    }
+    // Search filter
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -120,6 +130,9 @@ export default function Board() {
           </>
         )}
       </div>
+
+      {/* ── Quote Filter ── */}
+      <QuoteFilter value={quoteFilter} onChange={setQuoteFilter} />
 
       {/* ── Search + Tab Bar ── */}
       <div className="flex items-center gap-3 flex-wrap">

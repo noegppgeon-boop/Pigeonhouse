@@ -17,6 +17,7 @@ function deserializeCurve(raw: any): BondingCurveData {
   return {
     tokenMint: new PublicKey(raw.tokenMint),
     creator: new PublicKey(raw.creator),
+    quoteMint: raw.quoteMint ? new PublicKey(raw.quoteMint) : undefined,
     virtualPigeonReserves: new BN(raw.virtualPigeonReserves),
     virtualTokenReserves: new BN(raw.virtualTokenReserves),
     realPigeonReserves: new BN(raw.realPigeonReserves),

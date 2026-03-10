@@ -9,6 +9,7 @@ export interface CurveItem {
   account: {
     tokenMint: PublicKey;
     creator: PublicKey;
+    quoteMint?: PublicKey;
     virtualPigeonReserves: BN;
     virtualTokenReserves: BN;
     realPigeonReserves: BN;
@@ -40,6 +41,7 @@ function deserializeCurve(raw: any): CurveItem {
     account: {
       tokenMint: new PublicKey(raw.account.tokenMint),
       creator: new PublicKey(raw.account.creator),
+      quoteMint: raw.account.quoteMint ? new PublicKey(raw.account.quoteMint) : undefined,
       virtualPigeonReserves: new BN(raw.account.virtualPigeonReserves),
       virtualTokenReserves: new BN(raw.account.virtualTokenReserves),
       realPigeonReserves: new BN(raw.account.realPigeonReserves),
