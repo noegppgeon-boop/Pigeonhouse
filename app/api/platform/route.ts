@@ -187,6 +187,23 @@ export async function GET(req: Request) {
       }
     }).filter(Boolean);
 
+    // Fetch quote-specific graduation thresholds for all unique quote mints
+    const quoteMints = new Set<string>();
+    for (const c of curves) {
+      if (c && (c as any).account?.quoteMint) quoteMints.add((c as any).account.quoteMint);
+    }
+    const quoteGradMap: Record<string, string> = {};
+    for (const qm of quoteMints) {
+      try {
+        const qmPk = new PublicKey(qm);
+        const [qcPDA] = PublicKey.findProgramAddressSync(
+          [Buffer.from("quote_asset"), qmPk.toBuffer()], pid
+        );
+        const qc = await (program.account as any).quoteAssetConfig.fetch(qcPDA);
+        quoteGradMap[qm] = qc.graduationThreshold.toString();
+      } catch { /* skip */ }
+    }
+
     return NextResponse.json({
       config: {
         authority: config.authority.toBase58(),
@@ -197,6 +214,7 @@ export async function GET(req: Request) {
         totalTokensLaunched: config.totalTokensLaunched.toString(),
         totalPigeonBurned: config.totalPigeonBurned.toString(),
       },
+      quoteGradMap,
       curves,
     });
   } catch (err: any) {

@@ -29,6 +29,7 @@ export interface PlatformStats {
   totalPigeonBurned: BN;
   totalVolume: BN;
   graduationAmount: BN;
+  quoteGradMap: Record<string, string>;
   feeBps: number;
   recentTokens: CurveItem[];
   trendingTokens: CurveItem[];
@@ -74,6 +75,14 @@ export function usePlatformStats() {
 
       const allCurves = data.curves.map(deserializeCurve);
       const graduationAmount = new BN(data.config.graduationPigeonAmount);
+      const quoteGradMap: Record<string, string> = data.quoteGradMap || {};
+
+      // Helper to get quote-specific graduation for a curve
+      const getGradForCurve = (c: CurveItem): BN => {
+        const qm = c.account.quoteMint?.toBase58();
+        if (qm && quoteGradMap[qm]) return new BN(quoteGradMap[qm]);
+        return graduationAmount;
+      };
 
       const recentTokens = [...allCurves].sort(
         (a, b) =>
@@ -91,9 +100,10 @@ export function usePlatformStats() {
       const graduatingSoon = [...allCurves]
         .filter((c) => !c.account.complete)
         .sort((a, b) => {
-          const gradNum = graduationAmount.toNumber();
-          const aP = a.account.realPigeonReserves.toNumber() / gradNum;
-          const bP = b.account.realPigeonReserves.toNumber() / gradNum;
+          const aGrad = getGradForCurve(a).toNumber();
+          const bGrad = getGradForCurve(b).toNumber();
+          const aP = aGrad > 0 ? a.account.realPigeonReserves.toNumber() / aGrad : 0;
+          const bP = bGrad > 0 ? b.account.realPigeonReserves.toNumber() / bGrad : 0;
           return bP - aP;
         });
 
@@ -107,6 +117,7 @@ export function usePlatformStats() {
         totalPigeonBurned: new BN(data.config.totalPigeonBurned),
         totalVolume,
         graduationAmount,
+        quoteGradMap,
         feeBps: data.config.platformFeeBps,
         recentTokens: recentTokens.slice(0, 20),
         trendingTokens: trendingTokens.slice(0, 10),

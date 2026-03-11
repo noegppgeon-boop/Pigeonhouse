@@ -133,6 +133,20 @@ export async function GET(
 
     const curve = deserializeBondingCurveRaw(curveAcct.data as Buffer);
 
+    // Fetch quote-specific graduation threshold if quoteMint exists
+    let graduationAmount = config.graduationPigeonAmount.toString();
+    if (curve.quoteMint) {
+      try {
+        const quoteMintPk = new PublicKey(curve.quoteMint);
+        const [quoteConfigPDA] = PublicKey.findProgramAddressSync(
+          [Buffer.from("quote_asset"), quoteMintPk.toBuffer()],
+          pid
+        );
+        const quoteConfig = await (program.account as any).quoteAssetConfig.fetch(quoteConfigPDA);
+        graduationAmount = quoteConfig.graduationThreshold.toString();
+      } catch { /* fallback to global */ }
+    }
+
     return NextResponse.json({
       curve,
       config: {
@@ -140,7 +154,7 @@ export async function GET(
         pigeonMint: config.pigeonMint.toBase58(),
         treasury: config.treasury.toBase58(),
         platformFeeBps: config.platformFeeBps,
-        graduationPigeonAmount: config.graduationPigeonAmount.toString(),
+        graduationPigeonAmount: graduationAmount,
         totalTokensLaunched: config.totalTokensLaunched.toString(),
         totalPigeonBurned: config.totalPigeonBurned.toString(),
       },

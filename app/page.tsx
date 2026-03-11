@@ -48,6 +48,12 @@ export default function Board() {
 
   const allCurves = stats?.recentTokens ?? [];
   const graduationAmount = stats?.graduationAmount ?? new BN(1);
+  const quoteGradMap = stats?.quoteGradMap ?? {};
+  const getGradForCurve = (c: CurveItem): BN => {
+    const qm = c.account.quoteMint?.toBase58();
+    if (qm && quoteGradMap[qm]) return new BN(quoteGradMap[qm]);
+    return graduationAmount;
+  };
 
   // Tab-based filtering & sorting
   const filtered = (() => {
@@ -64,8 +70,10 @@ export default function Board() {
         return items
           .filter((c) => !c.account.complete)
           .sort((a, b) => {
-            const aP = a.account.realPigeonReserves.toNumber() / gradNum;
-            const bP = b.account.realPigeonReserves.toNumber() / gradNum;
+            const aG = getGradForCurve(a).toNumber();
+            const bG = getGradForCurve(b).toNumber();
+            const aP = aG > 0 ? a.account.realPigeonReserves.toNumber() / aG : 0;
+            const bP = bG > 0 ? b.account.realPigeonReserves.toNumber() / bG : 0;
             return bP - aP;
           });
       case "burn":
@@ -233,7 +241,7 @@ export default function Board() {
               <BoardCard
                 key={item.account.tokenMint.toBase58()}
                 item={item}
-                graduationAmount={graduationAmount}
+                graduationAmount={getGradForCurve(item)}
                 index={i}
                 isWatched={isWatched(item.account.tokenMint.toBase58())}
                 onToggleWatch={toggleWatch}

@@ -109,6 +109,12 @@ export default function TokenPage() {
   const quoteSymbol = quoteAsset?.symbol ?? "PIGEON";
   const quoteDecimals = quoteAsset?.decimals ?? 6;
   const remaining = config.graduationPigeonAmount.sub(curve.realPigeonReserves);
+  const formatQuote = (amt: BN) => {
+    const val = amt.toNumber() / Math.pow(10, quoteDecimals);
+    if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
+    if (val >= 1_000) return `${(val / 1_000).toFixed(2)}K`;
+    return val.toFixed(2);
+  };
   const shortMint = shortenAddress(mintAddress, 6);
   const status = getStatus(progress, isComplete);
   const createdAt = curve.createdAt?.toNumber?.() ?? 0;
@@ -214,7 +220,7 @@ export default function TokenPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <MetricCard label="Price" value={price < 0.001 ? price.toExponential(2) : price.toFixed(6)} unit={quoteSymbol} icon={TrendingUp} color="text-txt" />
         <MetricCard label="Market Cap" value={formatNumber(mcap && typeof mcap.toNumber === 'function' ? mcap.toNumber() / Math.pow(10, quoteDecimals) : (typeof mcap === 'number' ? mcap : 0))} unit={quoteSymbol} icon={BarChart3} color="text-bronze" />
-        <MetricCard label="Ascension" value={`${progress.toFixed(1)}%`} unit={isComplete ? "Ascended" : `${formatPigeon(remaining)} to go`} icon={Target} color="text-crimson" />
+        <MetricCard label="Ascension" value={`${progress.toFixed(1)}%`} unit={isComplete ? "Ascended" : `${formatQuote(remaining)} ${quoteSymbol} to go`} icon={Target} color="text-crimson" />
         <MetricCard label="Est. Burned" value={formatNumber(burnedEstimate)} unit="PIGEON 🔥" icon={Flame} color="text-crimson" />
         <MetricCard label="Reserves" value={formatNumber(curve.realPigeonReserves.toNumber() / Math.pow(10, quoteDecimals))} unit={quoteSymbol} icon={Zap} color="text-teal" />
       </div>
@@ -237,8 +243,8 @@ export default function TokenPage() {
           />
         </div>
         <div className="flex justify-between mt-2 text-[10px] text-txt-muted font-mono">
-          <span>{formatPigeon(curve.realPigeonReserves)} raised</span>
-          <span>{formatPigeon(config.graduationPigeonAmount)} target</span>
+          <span>{formatQuote(curve.realPigeonReserves)} {quoteSymbol} raised</span>
+          <span>{formatQuote(config.graduationPigeonAmount)} {quoteSymbol} target</span>
         </div>
       </div>
 
