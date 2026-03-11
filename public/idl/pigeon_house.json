@@ -1064,6 +1064,100 @@
       ]
     },
     {
+      "name": "migrate_curve",
+      "docs": [
+        "Migrates old BondingCurve accounts (pre-multi-quote) to new layout.",
+        "Inserts quote_mint = PIGEON_MINT, shifts all subsequent fields +32 bytes.",
+        "Authority-gated, idempotent."
+      ],
+      "discriminator": [
+        151,
+        254,
+        50,
+        13,
+        112,
+        235,
+        152,
+        72
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  105,
+                  103,
+                  101,
+                  111,
+                  110,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "bonding_curve",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  95,
+                  99,
+                  117,
+                  114,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "register_quote_asset",
       "discriminator": [
         27,

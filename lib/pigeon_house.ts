@@ -207,27 +207,30 @@ function bnToSafeNumber(bn: BN, decimals: number = 0): number {
   try { return bn.toNumber(); } catch { return parseFloat(bn.toString()); }
 }
 
-export function getCurrentPrice(curve: BondingCurveData): number {
-  // Price = PIGEON per token (pump.fun style: virtual only)
-  const vp = curve.virtualPigeonReserves;
-  const vt = curve.virtualTokenReserves;
-  if (vt.isZero()) return 0;
-  // Use mul/div to stay in BN, then convert safely
-  // price = vp / vt — scale by 1e12 to keep precision
+export function getCurrentPrice(curve: BondingCurveData, quoteDecimals: number = 6): number {
+  // Price = (VP + RP) / (VT + RT) — includes real reserves for accurate current price
+  const totalQuote = curve.virtualPigeonReserves.add(curve.realPigeonReserves);
+  const totalToken = curve.virtualTokenReserves.add(curve.realTokenReserves);
+  if (totalToken.isZero()) return 0;
+  // price = totalQuote / totalToken — scale by 1e12 to keep precision
   const scale = new BN("1000000000000");
-  const scaledPrice = vp.mul(scale).div(vt);
-  return bnToSafeNumber(scaledPrice) / 1e12;
+  const scaledPrice = totalQuote.mul(scale).div(totalToken);
+  // Normalize: token always 6 decimals, quote may differ (SOL=9)
+  const decimalDiff = quoteDecimals - 6;
+  return bnToSafeNumber(scaledPrice) / 1e12 / (10 ** decimalDiff);
 }
 
-export function getMarketCap(curve: BondingCurveData): BN {
-  // pump.fun style: virtual only
-  const vp = curve.virtualPigeonReserves;
-  const vt = curve.virtualTokenReserves;
-  if (vt.isZero()) return new BN(0);
-  // mcap = price * total_supply = vp * total_supply / vt
-  const mcap = vp
+export function getMarketCap(curve: BondingCurveData, quoteDecimals: number = 6): BN {
+  // mcap = price * total_supply (using total reserves for current price)
+  const totalQuote = curve.virtualPigeonReserves.add(curve.realPigeonReserves);
+  const totalToken = curve.virtualTokenReserves.add(curve.realTokenReserves);
+  if (totalToken.isZero()) return new BN(0);
+  // mcap_raw = totalQuote * totalSupply / totalToken
+  // totalSupply is in token-raw (6 dec), totalQuote in quote-raw (quoteDec)
+  // Result is in quote-raw units (divide by 10^quoteDec to get human)
+  const mcap = totalQuote
     .mul(curve.tokenTotalSupply)
-    .div(vt);
+    .div(totalToken);
   return mcap;
 }
 
@@ -424,10 +427,11 @@ export async function executeCreateToken(
   const feeVault = getFeeVaultPDA();
   const metadataPDA = getMetadataPDA(tokenMint.publicKey);
 
-  // Allocate mint account space (Token-2022 mint + extensions)
-  // getMintLen([TransferFeeConfig, TransferHook]) = 346
-  // Base(82) + padding(83) + AccountType(1) + TransferFeeConfig(4+108) + TransferHook(4+64) = 346
-  const mintSpace = 346; // Exact: Token-2022 mint + TransferFeeConfig + TransferHook
+  // Allocate mint account space (Token-2022 mint + TransferFee only)
+  // getMintLen([TransferFeeConfig]) = 278
+  // Base(82) + padding(83) + AccountType(1) + TransferFeeConfig(4+108) = 278
+  // TransferHook removed — Meteora DAMM v2 permissionless without it
+  const mintSpace = 278; // Token-2022 mint + TransferFeeConfig (no TransferHook)
   const mintRent = await connection.getMinimumBalanceForRentExemption(mintSpace);
   const createMintIx = SystemProgram.createAccount({
     fromPubkey: wallet.publicKey,
@@ -466,13 +470,8 @@ export async function executeCreateToken(
     .signers([tokenMint])
     .rpc();
 
-  // Auto-initialize hook FeeAccrualVault + ExtraAccountMetaList for the new token
-  // This is needed for graduation (TransferHook activation)
-  try {
-    await initFeeVault(wallet, tokenMint.publicKey);
-  } catch (e) {
-    console.warn("initFeeVault failed (non-critical, can retry later):", e);
-  }
+  // NOTE: TransferHook FeeAccrualVault init removed — tokens no longer have TransferHook.
+  // Post-graduation fees collected via TransferFee (harvest_withheld_tokens_to_mint).
 
   return { txSig: tx, tokenMint: tokenMint.publicKey };
 }

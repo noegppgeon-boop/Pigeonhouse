@@ -17,7 +17,7 @@ import { Search, Eye } from "lucide-react";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { QuoteFilter } from "@/components/shared/QuoteFilter";
-import { type QuoteAssetKey, QUOTE_ASSETS } from "@/lib/constants";
+import { type QuoteAssetKey, QUOTE_ASSETS, getQuoteAssetByMint } from "@/lib/constants";
 
 type TabKey = "new" | "heating" | "graduating" | "burn" | "volume" | "watched";
 
@@ -265,7 +265,17 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
   const progress = gradNum > 0 ? Math.min(100, (pigeonReserve / gradNum) * 100) : 0;
   const vp = account.virtualPigeonReserves?.toNumber?.() ?? 0;
   const vt = account.virtualTokenReserves?.toNumber?.() ?? 0;
-  const price = vt > 0 ? vp / vt : 0;
+  const rp = account.realPigeonReserves?.toNumber?.() ?? 0;
+  const rt = account.realTokenReserves?.toNumber?.() ?? 0;
+  // Price = (VP+RP) / (VT+RT) — includes real reserves for accurate current price
+  const quoteMintStr = account.quoteMint?.toBase58?.() ?? "";
+  const quoteAsset = getQuoteAssetByMint(quoteMintStr);
+  const quoteDecimals = quoteAsset?.decimals ?? 6;
+  const tokenDecimals = 6; // all launched tokens are 6 decimals
+  const decimalDiff = quoteDecimals - tokenDecimals;
+  const totalQuote = vp + rp;
+  const totalToken = vt + rt;
+  const price = totalToken > 0 ? (totalQuote / totalToken) / (10 ** decimalDiff) : 0;
   const createdAt = account.createdAt?.toNumber?.() ?? 0;
   const burned = pigeonReserve * 0.015; // 1.5% burn
   const status = getStatusLabel(progress, complete);

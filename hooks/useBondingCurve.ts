@@ -12,6 +12,7 @@ import {
   type BondingCurveData,
   type GlobalConfigData,
 } from "@/lib/pigeon_house";
+import { getQuoteAssetByMint } from "@/lib/constants";
 
 function deserializeCurve(raw: any): BondingCurveData {
   return {
@@ -91,8 +92,13 @@ export function useBondingCurve(mintAddress: string | null) {
     [curve, config]
   );
 
-  const price = useMemo(() => (curve ? getCurrentPrice(curve) : 0), [curve]);
-  const mcap = useMemo(() => (curve ? getMarketCap(curve) : new BN(0)), [curve]);
+  const quoteDecimals = useMemo(() => {
+    if (!curve?.quoteMint) return 6;
+    const qa = getQuoteAssetByMint(curve.quoteMint.toBase58());
+    return qa?.decimals ?? 6;
+  }, [curve]);
+  const price = useMemo(() => (curve ? getCurrentPrice(curve, quoteDecimals) : 0), [curve, quoteDecimals]);
+  const mcap = useMemo(() => (curve ? getMarketCap(curve, quoteDecimals) : new BN(0)), [curve, quoteDecimals]);
   const progress = useMemo(
     () =>
       curve && config

@@ -1,8 +1,9 @@
 "use client";
 
 import { BarChart3 } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 
+/* ── Types ── */
 interface Trade {
   type: "buy" | "sell";
   signature: string;
@@ -18,22 +19,34 @@ interface Candle {
   h: number;
   l: number;
   c: number;
-  green: boolean;
   volume: number;
 }
 
 type Timeframe = "1M" | "5M" | "15M" | "1H" | "4H";
 
 const TF_SECONDS: Record<Timeframe, number> = {
-  "1M": 60, "5M": 300, "15M": 900, "1H": 3600, "4H": 14400,
+  "1M": 60,
+  "5M": 300,
+  "15M": 900,
+  "1H": 3600,
+  "4H": 14400,
 };
 
+const TF_LABELS: Record<Timeframe, string> = {
+  "1M": "1m",
+  "5M": "5m",
+  "15M": "15m",
+  "1H": "1H",
+  "4H": "4H",
+};
+
+/* ── Build candles ── */
 function buildCandles(trades: Trade[], tfSec: number): Candle[] {
   if (!trades.length) return [];
   const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
   const buckets = new Map<number, Trade[]>();
   for (const t of sorted) {
-    if (!t.timestamp || !t.price) continue;
+    if (!t.timestamp || !t.price || t.price <= 0) continue;
     const bucket = Math.floor(t.timestamp / tfSec) * tfSec;
     if (!buckets.has(bucket)) buckets.set(bucket, []);
     buckets.get(bucket)!.push(t);
@@ -45,7 +58,14 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
     const prices = group.map((t) => t.price);
     const o = prices[0];
     const c = prices[prices.length - 1];
-    candles.push({ time: k, o, h: Math.max(...prices), l: Math.min(...prices), c, green: c >= o, volume: group.reduce((s, t) => s + t.pigeonAmount, 0) });
+    candles.push({
+      time: k,
+      o,
+      h: Math.max(...prices),
+      l: Math.min(...prices),
+      c,
+      volume: group.reduce((s, t) => s + t.pigeonAmount, 0),
+    });
   }
   if (candles.length >= 2) {
     const filled: Candle[] = [candles[0]];
@@ -54,161 +74,260 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
       const curr = candles[i];
       let t = prev.time + tfSec;
       while (t < curr.time) {
-        filled.push({ time: t, o: prev.c, h: prev.c, l: prev.c, c: prev.c, green: true, volume: 0 });
+        filled.push({ time: t, o: prev.c, h: prev.c, l: prev.c, c: prev.c, volume: 0 });
         t += tfSec;
       }
       filled.push(curr);
     }
-    return filled.slice(-60);
+    return filled.slice(-200);
   }
   return candles;
 }
 
+/* ── Theme ── */
+const CHART_COLORS = {
+  bg: "#131722",
+  gridLines: "#1e222d",
+  text: "#787b86",
+  crosshair: "#9598a1",
+  upColor: "#26a69a",
+  downColor: "#ef5350",
+  volumeUp: "rgba(38, 166, 154, 0.25)",
+  volumeDown: "rgba(239, 83, 80, 0.25)",
+};
+
+/* ── Main component ── */
 export default function ChartArea({ mint }: { mint?: string }) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [tf, setTf] = useState<Timeframe>("5M");
 
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const candleSeriesRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const volumeSeriesRef = useRef<any>(null);
+  const [chartReady, setChartReady] = useState(false);
+
+  // Fetch trades
   useEffect(() => {
     if (!mint) { setLoading(false); return; }
+    let cancelled = false;
     async function load() {
       try {
         const res = await fetch(`/api/trades/${mint}`);
         if (!res.ok) throw new Error("err");
         const data = await res.json();
-        setTrades(data.trades || []);
-      } catch { setTrades([]); }
-      finally { setLoading(false); }
+        if (!cancelled) setTrades(data.trades || []);
+      } catch { if (!cancelled) setTrades([]); }
+      finally { if (!cancelled) setLoading(false); }
     }
     load();
-    const interval = setInterval(load, 30_000);
-    return () => clearInterval(interval);
+    const iv = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(iv); };
   }, [mint]);
 
   const candles = useMemo(() => buildCandles(trades, TF_SECONDS[tf]), [trades, tf]);
 
-  const svgW = 560, svgH = 220;
-  const padL = 0, padR = 0, padT = 10, padB = 20;
-  const chartW = svgW - padL - padR;
-  const chartH = svgH - padT - padB;
+  // Create chart (dynamic import to avoid SSR)
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+    let disposed = false;
 
-  const prices = candles.flatMap((c) => [c.h, c.l]);
-  const minP = prices.length ? Math.min(...prices) * 0.98 : 0;
-  const maxP = prices.length ? Math.max(...prices) * 1.02 : 1;
-  const range = maxP - minP || 1;
-  const scaleY = (v: number) => padT + chartH - ((v - minP) / range) * chartH;
+    import("lightweight-charts").then((lc) => {
+      if (disposed || !chartContainerRef.current) return;
 
-  const barW = candles.length > 0 ? Math.min(20, (chartW / candles.length) * 0.7) : 10;
-  const gap = candles.length > 1 ? (chartW - candles.length * barW) / (candles.length - 1) : 0;
+      const chart = lc.createChart(chartContainerRef.current, {
+        width: chartContainerRef.current.clientWidth,
+        height: 400,
+        layout: {
+          background: { type: lc.ColorType.Solid, color: CHART_COLORS.bg },
+          textColor: CHART_COLORS.text,
+          fontFamily: "'Inter', system-ui, sans-serif",
+          fontSize: 11,
+        },
+        grid: {
+          vertLines: { color: CHART_COLORS.gridLines },
+          horzLines: { color: CHART_COLORS.gridLines },
+        },
+        crosshair: {
+          mode: lc.CrosshairMode.Normal,
+          vertLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#2a2e39" },
+          horzLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#2a2e39" },
+        },
+        rightPriceScale: {
+          borderColor: CHART_COLORS.gridLines,
+          scaleMargins: { top: 0.1, bottom: 0.25 },
+        },
+        timeScale: {
+          borderColor: CHART_COLORS.gridLines,
+          timeVisible: true,
+          secondsVisible: false,
+          barSpacing: 14,
+        },
+        handleScale: { axisPressedMouseMove: true },
+        handleScroll: { vertTouchDrag: false },
+      });
 
-  const useLine = candles.length <= 2 && trades.length > 1;
-  const sortedTrades = useMemo(() => {
-    if (!useLine) return [];
-    return [...trades].filter((t) => t.timestamp && t.price).sort((a, b) => a.timestamp - b.timestamp);
-  }, [useLine, trades]);
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: CHART_COLORS.upColor,
+        downColor: CHART_COLORS.downColor,
+        wickUpColor: CHART_COLORS.upColor,
+        wickDownColor: CHART_COLORS.downColor,
+        borderUpColor: CHART_COLORS.upColor,
+        borderDownColor: CHART_COLORS.downColor,
+        borderVisible: false,
+      });
+
+      const volumeSeries = chart.addHistogramSeries({
+        priceFormat: { type: "volume" },
+        priceScaleId: "volume",
+      });
+
+      chart.priceScale("volume").applyOptions({
+        scaleMargins: { top: 0.8, bottom: 0 },
+      });
+
+      chartRef.current = chart;
+      candleSeriesRef.current = candleSeries;
+      volumeSeriesRef.current = volumeSeries;
+      setChartReady(true);
+
+      // Resize
+      const ro = new ResizeObserver((entries) => {
+        if (entries[0]) chart.applyOptions({ width: entries[0].contentRect.width });
+      });
+      ro.observe(chartContainerRef.current!);
+
+      // Cleanup inside the promise
+      const container = chartContainerRef.current;
+      (chart as any).__ro = ro;
+      (chart as any).__container = container;
+    });
+
+    return () => {
+      disposed = true;
+      if (chartRef.current) {
+        const ro = (chartRef.current as any).__ro;
+        const container = (chartRef.current as any).__container;
+        if (ro && container) ro.unobserve(container);
+        ro?.disconnect();
+        chartRef.current.remove();
+        chartRef.current = null;
+        candleSeriesRef.current = null;
+        volumeSeriesRef.current = null;
+        setChartReady(false);
+      }
+    };
+  }, []);
+
+  // Update data
+  useEffect(() => {
+    if (!chartReady || !candleSeriesRef.current || !volumeSeriesRef.current) return;
+
+    const candleData = candles.map((c) => ({
+      time: c.time as any,
+      open: c.o,
+      high: c.h,
+      low: c.l,
+      close: c.c,
+    }));
+
+    const volumeData = candles.map((c) => ({
+      time: c.time as any,
+      value: c.volume,
+      color: c.c >= c.o ? CHART_COLORS.volumeUp : CHART_COLORS.volumeDown,
+    }));
+
+    candleSeriesRef.current.setData(candleData);
+    volumeSeriesRef.current.setData(volumeData);
+
+    if (chartRef.current && candles.length > 0) {
+      chartRef.current.timeScale().fitContent();
+    }
+  }, [candles, chartReady]);
+
+  // Price helpers
+  const formatPrice = useCallback((price: number) => {
+    if (price === 0) return "0";
+    if (price < 0.000001) return price.toExponential(2);
+    if (price < 0.001) return price.toFixed(8);
+    if (price < 1) return price.toFixed(6);
+    return price.toFixed(4);
+  }, []);
+
+  const lastCandle = candles[candles.length - 1];
+  const firstCandle = candles[0];
+  const priceChange =
+    lastCandle && firstCandle && firstCandle.o > 0
+      ? ((lastCandle.c - firstCandle.o) / firstCandle.o) * 100
+      : 0;
 
   return (
-    <div className="card p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[12px] font-semibold text-txt-secondary flex items-center gap-2">
-          <BarChart3 className="h-3.5 w-3.5 text-bronze" />
-          <span>Price Chart</span>
-          <span className="font-lore italic text-txt-muted text-[11px] font-normal hidden sm:inline">— the flame&apos;s path</span>
-        </h3>
-        <div className="flex gap-0.5 bg-bg-elevated rounded-md p-0.5">
-          {(["1M", "5M", "15M", "1H", "4H"] as Timeframe[]).map((t) => (
+    <div className="card overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center gap-3">
+          <h3 className="text-[12px] font-semibold text-txt-secondary flex items-center gap-2">
+            <BarChart3 className="h-3.5 w-3.5 text-bronze" />
+            <span>Price Chart</span>
+          </h3>
+          {lastCandle && (
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="text-txt font-mono font-medium">
+                {formatPrice(lastCandle.c)}
+              </span>
+              <span
+                className={`font-semibold ${
+                  priceChange >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"
+                }`}
+              >
+                {priceChange >= 0 ? "+" : ""}
+                {priceChange.toFixed(2)}%
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Timeframe buttons */}
+        <div className="flex gap-0.5 bg-[#131722] rounded-md p-0.5 border border-[#1e222d]">
+          {(Object.keys(TF_LABELS) as Timeframe[]).map((t) => (
             <button
               key={t}
               onClick={() => setTf(t)}
-              className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${
+              className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${
                 tf === t
-                  ? "bg-bg-card text-txt shadow-sm"
-                  : "text-txt-muted hover:text-txt-secondary"
+                  ? "bg-[#2a2e39] text-[#d1d4dc] shadow-sm"
+                  : "text-[#787b86] hover:text-[#d1d4dc]"
               }`}
             >
-              {t}
+              {TF_LABELS[t]}
             </button>
           ))}
         </div>
       </div>
 
-      {loading ? (
-        <div className="h-56 flex items-center justify-center">
-          <div className="animate-spin h-5 w-5 border-2 border-crimson border-t-transparent rounded-full" />
-        </div>
-      ) : candles.length === 0 && !useLine ? (
-        <div className="h-56 flex flex-col items-center justify-center">
-          <BarChart3 className="h-5 w-5 text-txt-muted mb-2" />
-          <p className="text-[12px] text-txt-secondary font-medium">Awaiting first trade</p>
-          <p className="text-[10px] text-txt-muted font-lore italic mt-0.5">The chart awakens with the first offering</p>
-        </div>
-      ) : (
-        <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-56" preserveAspectRatio="xMidYMid meet">
-          {/* Grid */}
-          {[0.25, 0.5, 0.75].map((pct) => (
-            <line key={pct} x1={padL} y1={padT + chartH * pct} x2={svgW - padR} y2={padT + chartH * pct}
-              stroke="var(--border)" strokeDasharray="4 4" opacity={0.5} />
-          ))}
-          {/* Price labels */}
-          {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
-            const val = maxP - pct * range;
-            return (
-              <text key={pct} x={svgW - 2} y={padT + chartH * pct - 2} textAnchor="end"
-                fill="var(--text-tertiary)" fontSize="8" fontFamily="monospace">
-                {val < 0.001 ? val.toExponential(2) : val.toFixed(val < 1 ? 6 : 2)}
-              </text>
-            );
-          })}
-
-          {useLine ? (
-            <>
-              <defs>
-                <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1A7A6D" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#1A7A6D" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {(() => {
-                const pts = sortedTrades.map((t, i) => {
-                  const x = padL + (i / (sortedTrades.length - 1)) * chartW;
-                  return `${x},${scaleY(t.price)}`;
-                });
-                const areaPath = `M${pts[0]} ${pts.map(p => `L${p}`).join(" ")} L${padL + chartW},${padT + chartH} L${padL},${padT + chartH} Z`;
-                return (
-                  <>
-                    <path d={areaPath} fill="url(#lineGrad)" />
-                    <polyline points={pts.join(" ")} fill="none" stroke="#1A7A6D" strokeWidth="2" strokeLinejoin="round" />
-                    {sortedTrades.map((t, i) => (
-                      <circle key={i} cx={padL + (i / (sortedTrades.length - 1)) * chartW} cy={scaleY(t.price)} r="3"
-                        fill={t.type === "buy" ? "#2D7A4F" : "#B33A3A"} />
-                    ))}
-                  </>
-                );
-              })()}
-            </>
-          ) : (
-            candles.map((c, i) => {
-              const x = padL + i * (barW + gap);
-              const wickX = x + barW / 2;
-              const bodyTop = scaleY(Math.max(c.o, c.c));
-              const bodyBot = scaleY(Math.min(c.o, c.c));
-              const color = c.green ? "#2D7A4F" : "#B33A3A";
-              return (
-                <g key={i}>
-                  <line x1={wickX} y1={scaleY(c.h)} x2={wickX} y2={scaleY(c.l)} stroke={color} strokeWidth={1.5} />
-                  <rect x={x + barW * 0.15} y={bodyTop} width={barW * 0.7} height={Math.max(bodyBot - bodyTop, 1.5)} fill={color} rx={1.5} />
-                </g>
-              );
-            })
-          )}
-
-          {/* Current price line */}
-          {candles.length > 0 && (
-            <line x1={padL} y1={scaleY(candles[candles.length - 1].c)} x2={svgW - padR} y2={scaleY(candles[candles.length - 1].c)}
-              stroke="#A67C52" strokeWidth={0.8} strokeDasharray="3 3" opacity={0.7} />
-          )}
-        </svg>
-      )}
+      {/* Chart */}
+      <div style={{ position: "relative" }}>
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center z-10" style={{ height: 400, background: CHART_COLORS.bg }}>
+            <div className="animate-spin h-5 w-5 border-2 border-crimson border-t-transparent rounded-full" />
+          </div>
+        )}
+        {!loading && candles.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ height: 400, background: CHART_COLORS.bg }}>
+            <BarChart3 className="h-6 w-6 text-[#787b86] mb-3" />
+            <p className="text-[12px] text-[#d1d4dc] font-medium">Awaiting first trade</p>
+            <p className="text-[10px] text-[#787b86] font-lore italic mt-1">The chart awakens with the first offering</p>
+          </div>
+        )}
+        <div
+          ref={chartContainerRef}
+          style={{ width: "100%", height: 400, visibility: candles.length > 0 ? "visible" : "hidden" }}
+        />
+      </div>
     </div>
   );
 }

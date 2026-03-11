@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" width="1500" height="500">
+  <defs>
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5F0E8" />
+      <stop offset="50%" style="stop-color:#EDE8DD" />
+      <stop offset="100%" style="stop-color:#E5DFD3" />
+    </linearGradient>
+    <linearGradient id="bFireGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B2500" />
+      <stop offset="50%" style="stop-color:#C68B2C" />
+      <stop offset="100%" style="stop-color:#A67C52" />
+    </linearGradient>
+    <linearGradient id="bPigeonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6B6560" />
+      <stop offset="100%" style="stop-color:#4A4540" />
+    </linearGradient>
+    <linearGradient id="bBodyLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9C9590" />
+      <stop offset="100%" style="stop-color:#6B6560" />
+    </linearGradient>
+    <linearGradient id="bWingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1A7A6D" />
+      <stop offset="100%" style="stop-color:#156B60" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B2500;stop-opacity:0" />
+      <stop offset="20%" style="stop-color:#8B2500;stop-opacity:0.5" />
+      <stop offset="50%" style="stop-color:#C68B2C;stop-opacity:0.5" />
+      <stop offset="80%" style="stop-color:#1A7A6D;stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:#1A7A6D;stop-opacity:0" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#8B2500" />
+      <stop offset="100%" style="stop-color:#A67C52" />
+    </linearGradient>
+    <filter id="bGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="bFireGlow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#2C2825" flood-opacity="0.1"/>
+    </filter>
+    <filter id="pigeonShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#2C2825" flood-opacity="0.12"/>
+    </filter>
+    <!-- Subtle texture pattern -->
+    <pattern id="paperTexture" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect width="200" height="200" fill="none"/>
+      <circle cx="20" cy="30" r="0.5" fill="#D4CFC6" opacity="0.3"/>
+      <circle cx="80" cy="70" r="0.5" fill="#D4CFC6" opacity="0.2"/>
+      <circle cx="150" cy="20" r="0.5" fill="#D4CFC6" opacity="0.3"/>
+      <circle cx="40" cy="120" r="0.5" fill="#D4CFC6" opacity="0.2"/>
+      <circle cx="120" cy="160" r="0.5" fill="#D4CFC6" opacity="0.3"/>
+      <circle cx="180" cy="100" r="0.5" fill="#D4CFC6" opacity="0.2"/>
+      <circle cx="60" cy="180" r="0.5" fill="#D4CFC6" opacity="0.25"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background — parchment -->
+  <rect width="1500" height="500" fill="url(#bannerBg)"/>
+  
+  <!-- Paper texture overlay -->
+  <rect width="1500" height="500" fill="url(#paperTexture)"/>
+  
+  <!-- Subtle decorative border lines -->
+  <rect x="30" y="30" width="1440" height="440" rx="4" fill="none" stroke="#D4CFC6" stroke-width="1" opacity="0.5"/>
+  <rect x="35" y="35" width="1430" height="430" rx="3" fill="none" stroke="#D4CFC6" stroke-width="0.5" opacity="0.3"/>
+  
+  <!-- Accent line bottom -->
+  <rect x="0" y="488" width="1500" height="3" fill="url(#accentLine)"/>
+  
+  <!-- Decorative crimson corner ornaments -->
+  <path d="M50 50 L90 50 L50 50 L50 90" fill="none" stroke="#8B2500" stroke-width="1.5" opacity="0.3"/>
+  <path d="M1450 50 L1410 50 L1450 50 L1450 90" fill="none" stroke="#8B2500" stroke-width="1.5" opacity="0.3"/>
+  <path d="M50 450 L90 450 L50 450 L50 410" fill="none" stroke="#8B2500" stroke-width="1.5" opacity="0.3"/>
+  <path d="M1450 450 L1410 450 L1450 450 L1450 410" fill="none" stroke="#8B2500" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- Fire particles scattered -->
+  <g filter="url(#bGlow)" opacity="0.4">
+    <circle cx="120" cy="390" r="2" fill="#C68B2C"/>
+    <circle cx="190" cy="370" r="1.5" fill="#8B2500"/>
+    <circle cx="260" cy="400" r="2" fill="#A67C52"/>
+    <circle cx="320" cy="380" r="1" fill="#C68B2C"/>
+    <circle cx="155" cy="340" r="1.5" fill="#8B2500"/>
+    <circle cx="280" cy="360" r="1" fill="#A67C52"/>
+  </g>
+  
+  <!-- Pigeon with fire (left side) -->
+  <g transform="translate(200, 215) scale(0.78)" filter="url(#pigeonShadow)">
+    <!-- Fire behind pigeon -->
+    <g filter="url(#bFireGlow)" opacity="0.8">
+      <path d="M-38 175 Q-8 78 12 48 Q22 18 27 -18 Q32 18 42 48 Q62 78 92 175 Q27 138 -38 175Z" fill="url(#bFireGrad)" opacity="0.7"/>
+      <path d="M-55 175 Q-32 118 -12 78 Q2 48 12 18 Q7 58 -3 88 Q-22 128 -55 175Z" fill="#8B2500" opacity="0.45"/>
+      <path d="M108 175 Q82 118 62 78 Q48 48 38 18 Q43 58 53 88 Q72 128 108 175Z" fill="#8B2500" opacity="0.45"/>
+      <path d="M-12 175 Q8 108 22 68 Q27 28 27 -2 Q27 28 32 68 Q48 108 68 175 Q27 152 -12 175Z" fill="#C68B2C" opacity="0.6"/>
+    </g>
+    
+    <!-- Body -->
+    <ellipse cx="27" cy="58" rx="48" ry="55" fill="url(#bBodyLight)"/>
+    
+    <!-- Wings -->
+    <path d="M8 22 Q-40 -2 -72 12 Q-58 30 -32 45 Q-14 52 8 55Z" fill="url(#bWingGrad)" opacity="0.9"/>
+    <path d="M12 32 Q-28 12 -55 20" fill="none" stroke="#1A7A6D" stroke-width="1" opacity="0.35"/>
+    
+    <path d="M46 22 Q94 -2 126 12 Q112 30 86 45 Q68 52 46 55Z" fill="url(#bWingGrad)" opacity="0.9"/>
+    <path d="M42 32 Q82 12 109 20" fill="none" stroke="#1A7A6D" stroke-width="1" opacity="0.35"/>
+    
+    <!-- Head -->
+    <circle cx="27" cy="-8" r="27" fill="url(#bPigeonGrad)"/>
+    
+    <!-- Eyes -->
+    <circle cx="17" cy="-12" r="6" fill="#F5F0E8"/>
+    <circle cx="17" cy="-12" r="4" fill="#2C2825"/>
+    <circle cx="19" cy="-14" r="1.5" fill="#F5F0E8"/>
+    
+    <circle cx="37" cy="-12" r="6" fill="#F5F0E8"/>
+    <circle cx="37" cy="-12" r="4" fill="#2C2825"/>
+    <circle cx="39" cy="-14" r="1.5" fill="#F5F0E8"/>
+    
+    <!-- Beak -->
+    <path d="M22 -2 L27 7 L32 -2Z" fill="#C68B2C"/>
+    
+    <!-- Chest shimmer -->
+    <ellipse cx="27" cy="32" rx="20" ry="16" fill="#8B2500" opacity="0.1"/>
+    
+    <!-- Feet -->
+    <path d="M14 108 L10 124 M10 124 L4 128 M10 124 L12 130 M10 124 L16 129" stroke="#C68B2C" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M40 108 L44 124 M44 124 L50 128 M44 124 L42 130 M44 124 L38 129" stroke="#C68B2C" stroke-width="2" stroke-linecap="round" fill="none"/>
+  </g>
+  
+  <!-- Text: PigeonHouse -->
+  <g filter="url(#textShadow)">
+    <text x="480" y="185" font-family="'Crimson Text', 'Georgia', serif" font-size="92" font-weight="700" fill="url(#textGrad)" letter-spacing="-1">PigeonHouse</text>
+  </g>
+  
+  <!-- Tagline -->
+  <text x="480" y="235" font-family="'Inter', system-ui, sans-serif" font-size="22" font-weight="400" fill="#6B6560" letter-spacing="2">The First Deflationary Token Launchpad on Solana</text>
+  
+  <!-- Subtle divider -->
+  <line x1="480" y1="258" x2="680" y2="258" stroke="#D4CFC6" stroke-width="1"/>
+  <circle cx="680" cy="258" r="2" fill="#C68B2C" opacity="0.5"/>
+  
+  <!-- Feature badges — parchment style -->
+  <g transform="translate(480, 285)">
+    <!-- Burn badge -->
+    <rect x="0" y="0" width="120" height="34" rx="4" fill="#F5F0E8" stroke="#8B2500" stroke-width="1" opacity="0.9"/>
+    <text x="60" y="22" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#8B2500" text-anchor="middle">🔥 Auto Burn</text>
+    
+    <!-- Bonding curve badge -->
+    <rect x="136" y="0" width="155" height="34" rx="4" fill="#F5F0E8" stroke="#A67C52" stroke-width="1" opacity="0.9"/>
+    <text x="213" y="22" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#A67C52" text-anchor="middle">📈 Bonding Curves</text>
+    
+    <!-- Multi-quote badge -->
+    <rect x="307" y="0" width="140" height="34" rx="4" fill="#F5F0E8" stroke="#1A7A6D" stroke-width="1" opacity="0.9"/>
+    <text x="377" y="22" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#1A7A6D" text-anchor="middle">🌊 Multi-Quote</text>
+    
+    <!-- Token-2022 badge -->
+    <rect x="463" y="0" width="135" height="34" rx="4" fill="#F5F0E8" stroke="#2D7A4F" stroke-width="1" opacity="0.9"/>
+    <text x="530" y="22" font-family="'Inter', sans-serif" font-size="13" font-weight="600" fill="#2D7A4F" text-anchor="middle">⚡ Token-2022</text>
+  </g>
+  
+  <!-- Bottom text -->
+  <text x="480" y="385" font-family="'Crimson Text', 'Georgia', serif" font-size="16" font-style="italic" fill="#9C9590" letter-spacing="0.5">Every trade burns PIGEON  ·  Every token makes it scarcer  ·  Built on Solana</text>
+  
+  <!-- Right side decorative — stylized flame/feather motif -->
+  <g transform="translate(1320, 250)" opacity="0.08">
+    <path d="M0 -80 Q20 -40 10 0 Q0 40 -10 80 Q10 40 20 0 Q30 -40 0 -80Z" fill="#8B2500" stroke="#8B2500" stroke-width="1"/>
+    <path d="M-30 -60 Q-10 -20 -20 20 Q-30 60 -40 100 Q-20 60 -10 20 Q0 -20 -30 -60Z" fill="#A67C52" stroke="#A67C52" stroke-width="1"/>
+    <path d="M30 -60 Q50 -20 40 20 Q30 60 20 100 Q40 60 50 20 Q60 -20 30 -60Z" fill="#1A7A6D" stroke="#1A7A6D" stroke-width="1"/>
+  </g>
+</svg>

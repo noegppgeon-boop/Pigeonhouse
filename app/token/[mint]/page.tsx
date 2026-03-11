@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/shared/Skeleton";
 import { formatNumber, shortenAddress, timeAgo } from "@/lib/utils";
 import { useTokenImage } from "@/hooks/useTokenImage";
 import { QuoteBadge } from "@/components/shared/QuoteBadge";
+import { getQuoteAssetByMint } from "@/lib/constants";
 import BN from "bn.js";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
@@ -104,6 +105,9 @@ export default function TokenPage() {
   }
 
   const isComplete = curve.complete;
+  const quoteAsset = curve.quoteMint ? getQuoteAssetByMint(curve.quoteMint.toBase58()) : undefined;
+  const quoteSymbol = quoteAsset?.symbol ?? "PIGEON";
+  const quoteDecimals = quoteAsset?.decimals ?? 6;
   const remaining = config.graduationPigeonAmount.sub(curve.realPigeonReserves);
   const shortMint = shortenAddress(mintAddress, 6);
   const status = getStatus(progress, isComplete);
@@ -208,11 +212,11 @@ export default function TokenPage() {
           SUMMARY METRICS
          ══════════════════════════════════ */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-        <MetricCard label="Price" value={price.toFixed(8)} unit="PIGEON" icon={TrendingUp} color="text-txt" />
-        <MetricCard label="Market Cap" value={formatNumber(typeof mcap === 'number' ? mcap : 0)} unit="PIGEON" icon={BarChart3} color="text-bronze" />
+        <MetricCard label="Price" value={price < 0.001 ? price.toExponential(2) : price.toFixed(6)} unit={quoteSymbol} icon={TrendingUp} color="text-txt" />
+        <MetricCard label="Market Cap" value={formatNumber(mcap && typeof mcap.toNumber === 'function' ? mcap.toNumber() / Math.pow(10, quoteDecimals) : (typeof mcap === 'number' ? mcap : 0))} unit={quoteSymbol} icon={BarChart3} color="text-bronze" />
         <MetricCard label="Ascension" value={`${progress.toFixed(1)}%`} unit={isComplete ? "Ascended" : `${formatPigeon(remaining)} to go`} icon={Target} color="text-crimson" />
         <MetricCard label="Est. Burned" value={formatNumber(burnedEstimate)} unit="PIGEON 🔥" icon={Flame} color="text-crimson" />
-        <MetricCard label="Reserves" value={formatPigeon(curve.realPigeonReserves)} unit="PIGEON" icon={Zap} color="text-teal" />
+        <MetricCard label="Reserves" value={formatNumber(curve.realPigeonReserves.toNumber() / Math.pow(10, quoteDecimals))} unit={quoteSymbol} icon={Zap} color="text-teal" />
       </div>
 
       {/* ── Graduation Progress ── */}

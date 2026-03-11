@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PigeonHouse — Token Launchpad Presentation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --border: #1e1e2e;
+  --text: #e4e4e7;
+  --muted: #71717a;
+  --accent: #f59e0b;
+  --accent2: #8b5cf6;
+  --accent3: #06b6d4;
+  --red: #ef4444;
+  --green: #22c55e;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Slide container */
+.slides { position: relative; width: 100vw; height: 100vh; }
+
+.slide {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 80px;
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}
+
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+.slide.prev {
+  opacity: 0;
+  transform: translateX(-60px);
+}
+
+/* Typography */
+h1 { font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
+h2 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+h3 { font-size: 1.5rem; font-weight: 600; color: var(--muted); margin-bottom: 32px; }
+p { font-size: 1.15rem; line-height: 1.7; color: var(--muted); max-width: 700px; }
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-2 {
+  background: linear-gradient(135deg, var(--accent3), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cards */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 32px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+}
+
+.card .icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.card h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.flow-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 28px;
+  text-align: center;
+  min-width: 160px;
+  transition: all 0.3s;
+}
+
+.flow-step.highlight {
+  border-color: var(--accent);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+}
+
+.flow-step .num {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.flow-step .label {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.flow-step .sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.flow-arrow {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+/* Code block */
+.code-block {
+  background: #0d0d14;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  max-width: 900px;
+  width: 100%;
+  margin-top: 24px;
+  white-space: pre;
+}
+
+.code-block .kw { color: #c792ea; }
+.code-block .fn { color: #82aaff; }
+.code-block .str { color: #c3e88d; }
+.code-block .num { color: #f78c6c; }
+.code-block .cmt { color: #546e7a; }
+.code-block .type { color: #ffcb6b; }
+.code-block .op { color: #89ddff; }
+
+/* Stats */
+.stats-row {
+  display: flex;
+  gap: 40px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat .value {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.stat .label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* Architecture diagram */
+.arch-box {
+  display: flex;
+  gap: 32px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.arch-col {
+  flex: 1;
+  min-width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.arch-col h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arch-col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.arch-col li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arch-col li:last-child { border-bottom: none; }
+
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-amber { background: var(--accent); }
+.dot-purple { background: var(--accent2); }
+.dot-cyan { background: var(--accent3); }
+.dot-green { background: var(--green); }
+.dot-red { background: var(--red); }
+
+/* Fee split visual */
+.fee-bar {
+  display: flex;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 32px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.fee-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  transition: flex 0.5s;
+}
+
+/* Progress indicator */
+.slide-nav {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+
+.slide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.slide-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+/* Slide counter */
+.slide-counter {
+  position: fixed;
+  top: 32px;
+  right: 40px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 100;
+}
+
+/* Logo */
+.logo {
+  position: fixed;
+  top: 28px;
+  left: 40px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Particle bg */
+.particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float linear infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.3; }
+  90% { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+/* Animated entry for cards */
+.card, .flow-step, .arch-col, .stat {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.slide.active .card,
+.slide.active .flow-step,
+.slide.active .arch-col,
+.slide.active .stat {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide.active .card:nth-child(1), .slide.active .flow-step:nth-child(1), .slide.active .arch-col:nth-child(1), .slide.active .stat:nth-child(1) { transition-delay: 0.1s; }
+.slide.active .card:nth-child(2), .slide.active .flow-step:nth-child(3), .slide.active .arch-col:nth-child(2), .slide.active .stat:nth-child(2) { transition-delay: 0.2s; }
+.slide.active .card:nth-child(3), .slide.active .flow-step:nth-child(5), .slide.active .arch-col:nth-child(3), .slide.active .stat:nth-child(3) { transition-delay: 0.3s; }
+.slide.active .card:nth-child(4), .slide.active .flow-step:nth-child(7), .slide.active .stat:nth-child(4) { transition-delay: 0.4s; }
+.slide.active .flow-step:nth-child(9) { transition-delay: 0.5s; }
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-amber { background: rgba(245,158,11,0.15); color: var(--accent); }
+.badge-purple { background: rgba(139,92,246,0.15); color: var(--accent2); }
+.badge-cyan { background: rgba(6,182,212,0.15); color: var(--accent3); }
+.badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+
+/* Two column */
+.two-col {
+  display: flex;
+  gap: 48px;
+  width: 100%;
+  max-width: 1100px;
+  align-items: flex-start;
+  margin-top: 32px;
+}
+
+.two-col > div { flex: 1; }
+
+/* Timeline */
+.timeline { margin-top: 32px; max-width: 800px; width: 100%; }
+.tl-item {
+  display: flex;
+  gap: 20px;
+  padding: 16px 0;
+  border-left: 2px solid var(--border);
+  padding-left: 24px;
+  position: relative;
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 22px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tl-date {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 80px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.tl-content h4 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.tl-content p { font-size: 0.85rem; color: var(--muted); }
+
+/* Audit score */
+.score-ring {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  margin: 32px auto;
+}
+
+.score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.score-ring circle {
+  fill: none;
+  stroke-width: 8;
+  cx: 100;
+  cy: 100;
+  r: 90;
+}
+.score-bg { stroke: var(--border); }
+.score-fg {
+  stroke: var(--green);
+  stroke-dasharray: 565.5;
+  stroke-dashoffset: 565.5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s ease;
+}
+.slide.active .score-fg { stroke-dashoffset: calc(565.5 - 565.5 * 0.83); }
+.score-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.score-text .num { font-size: 3rem; font-weight: 900; }
+.score-text .of { font-size: 1rem; color: var(--muted); }
+
+/* Keyboard hint */
+.kb-hint {
+  position: fixed;
+  bottom: 32px;
+  right: 40px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  z-index: 100;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.kb-hint kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+}
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Logo -->
+<div class="logo">🐦 <span class="gradient-text">PigeonHouse</span></div>
+
+<!-- Slide counter -->
+<div class="slide-counter" id="counter">01 / 14</div>
+
+<!-- Keyboard hint -->
+<div class="kb-hint"><kbd>←</kbd> <kbd>→</kbd> or click</div>
+
+<!-- SLIDES -->
+<div class="slides" id="slides">
+
+<!-- 1: Title -->
+<div class="slide active" data-slide="0">
+  <div style="text-align: center;">
+    <div style="font-size: 5rem; margin-bottom: 24px;">🐦</div>
+    <h1><span class="gradient-text">PigeonHouse</span></h1>
+    <h3 style="max-width: 600px; text-align: center; margin: 0 auto;">
+      The First Deflationary Token Launchpad on Solana
+    </h3>
+    <div style="display: flex; gap: 12px; margin-top: 32px; justify-content: center;">
+      <span class="badge badge-amber">🔥 Burn Mechanics</span>
+      <span class="badge badge-purple">📈 Bonding Curves</span>
+      <span class="badge badge-cyan">🌊 Multi-Quote</span>
+    </div>
+    <p style="margin-top: 48px; font-size: 0.9rem; text-align: center; max-width: 500px; margin-left: auto; margin-right: auto;">
+      Every trade burns PIGEON. Every token launched makes PIGEON more scarce.<br>
+      Built on Solana. Powered by fire. 🔥
+    </p>
+  </div>
+</div>
+
+<!-- 2: What is PigeonHouse? -->
+<div class="slide" data-slide="1">
+  <h2 style="text-align:center;">What is <span class="gradient-text">PigeonHouse</span>?</h2>
+  <h3 style="text-align: center;">pump.fun meets deflationary tokenomics</h3>
+  <div class="card-grid">
+    <div class="card">
+      <span class="icon">🚀</span>
+      <h4>Token Launchpad</h4>
+      <p>Create and launch tokens with bonding curves. Fair launch, no presale, no rug.</p>
+    </div>
+    <div class="card">
+      <span class="icon">🔥</span>
+      <h4>Deflationary Burns</h4>
+      <p>Every trade automatically burns PIGEON tokens. Supply shrinks with every transaction.</p>
+    </div>
+    <div class="card">
+      <span class="icon">💰</span>
+      <h4>Multi-Quote Assets</h4>
+      <p>Launch tokens priced in PIGEON, SOL, or SKR. Three rails, one protocol.</p>
+    </div>
+    <div class="card">
+      <span class="icon">🎓</span>
+      <h4>Auto-Graduation</h4>
+      <p>Hit the threshold → automatic DEX listing with liquidity locked forever.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 3: How It Works -->
+<div class="slide" data-slide="2">
+  <h2 style="text-align:center;">How It <span class="gradient-text">Works</span></h2>
+  <h3 style="text-align: center;">From creation to graduation</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="num">Step 1</div>
+      <div class="label">🎨 Create Token</div>
+      <div class="sub">Name, symbol, image</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight">
+      <div class="num">Step 2</div>
+      <div class="label">📈 Bonding Curve</div>
+      <div class="sub">AMM pricing, buy & sell</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="num">Step 3</div>
+      <div class="label">🔥 Auto Burn</div>
+      <div class="sub">2% fee → burn + reserve</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="num">Step 4</div>
+      <div class="label">🎓 Graduate</div>
+      <div class="sub">DEX pool + LP locked</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="num">Step 5</div>
+      <div class="label">🪝 Transfer Hook</div>
+      <div class="sub">0.25% fee on every transfer</div>
+    </div>
+  </div>
+  <p style="text-align: center; margin-top: 40px; font-size: 0.9rem;">
+    The bonding curve uses a constant-product AMM (pump.fun style) with virtual + real reserves.
+    <br>Graduation threshold is dynamically calculated based on PIGEON price.
+  </p>
+</div>
+
+<!-- 4: Fee Structure -->
+<div class="slide" data-slide="3">
+  <h2 style="text-align:center;"><span class="gradient-text">Fee</span> Structure</h2>
+  <h3 style="text-align: center;">Every fee burns PIGEON — by design</h3>
+  
+  <div style="max-width: 800px; width: 100%; margin-top: 24px;">
+    <p style="text-align:center; margin-bottom: 16px; font-weight: 600;">PIGEON Quote — 2% total fee</p>
+    <div class="fee-bar">
+      <div class="fee-seg" style="flex: 1.5; background: linear-gradient(135deg, #ef4444, #f97316);">🔥 1.5% Burn</div>
+      <div class="fee-seg" style="flex: 0.5; background: linear-gradient(135deg, #8b5cf6, #6366f1);">💰 0.5% Treasury</div>
+    </div>
+    
+    <p style="text-align:center; margin-bottom: 16px; margin-top: 32px; font-weight: 600;">SOL / SKR Quote — 2% total fee</p>
+    <div class="fee-bar">
+      <div class="fee-seg" style="flex: 1; background: linear-gradient(135deg, #ef4444, #f97316);">🔥 1% Burn Accrual</div>
+      <div class="fee-seg" style="flex: 0.5; background: linear-gradient(135deg, #06b6d4, #0ea5e9);">🏦 0.5% Reserve</div>
+      <div class="fee-seg" style="flex: 0.5; background: linear-gradient(135deg, #8b5cf6, #6366f1);">💰 0.5% Treasury</div>
+    </div>
+  </div>
+  
+  <p style="text-align: center; margin-top: 32px; font-size: 0.9rem;">
+    No referrer? Their 0.5% share goes to <strong style="color: var(--red);">extra burn</strong> 🔥<br>
+    <span style="color: var(--accent);">Post-graduation:</span> 0.25% TransferHook on every token transfer → swept & burned
+  </p>
+</div>
+
+<!-- 5: Multi-Quote System -->
+<div class="slide" data-slide="4">
+  <h2 style="text-align:center;">Multi-Quote <span class="gradient-text-2">System</span></h2>
+  <h3 style="text-align: center;">Three rails, one protocol</h3>
+  
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card" style="border-color: rgba(245,158,11,0.3);">
+      <span class="icon">🐦</span>
+      <h4 style="color: var(--accent);">PIGEON</h4>
+      <p>Native token. Direct burn on every trade. Token-2022 with 6 decimals.</p>
+      <div style="margin-top: 16px;">
+        <span class="badge badge-amber">Default Rail</span>
+      </div>
+    </div>
+    <div class="card" style="border-color: rgba(139,92,246,0.3);">
+      <span class="icon">◎</span>
+      <h4 style="color: var(--accent2);">SOL</h4>
+      <p>Native Solana. Fees accrue → cranker sweeps → swaps to PIGEON → burns.</p>
+      <div style="margin-top: 16px;">
+        <span class="badge badge-purple">9 Decimals</span>
+      </div>
+    </div>
+    <div class="card" style="border-color: rgba(6,182,212,0.3);">
+      <span class="icon">⚡</span>
+      <h4 style="color: var(--accent3);">SKR</h4>
+      <p>SPL token rail. Same accrual pattern. Strategic reserve for ecosystem.</p>
+      <div style="margin-top: 16px;">
+        <span class="badge badge-cyan">SPL Token</span>
+      </div>
+    </div>
+  </div>
+  
+  <p style="text-align: center; margin-top: 32px; font-size: 0.9rem;">
+    Each quote asset has its own <strong>graduation threshold</strong>, <strong>virtual reserves</strong>, and <strong>fee split</strong>.<br>
+    All configurable on-chain via <code style="color: var(--accent);">QuoteAssetConfig</code> PDA.
+  </p>
+</div>
+
+<!-- 6: Architecture -->
+<div class="slide" data-slide="5">
+  <h2 style="text-align:center;">System <span class="gradient-text">Architecture</span></h2>
+  
+  <div class="arch-box">
+    <div class="arch-col">
+      <h4>🦀 On-Chain (4 Programs)</h4>
+      <ul>
+        <li><span class="dot dot-amber"></span> <strong>PigeonHouse</strong> — Launchpad (14 instructions)</li>
+        <li><span class="dot dot-purple"></span> <strong>Hook Program</strong> — Token-2022 TransferHook</li>
+        <li><span class="dot dot-cyan"></span> <strong>Burn Router</strong> — Swap & burn engine</li>
+        <li><span class="dot dot-green"></span> <strong>Mock House</strong> — Localnet testing</li>
+      </ul>
+    </div>
+    <div class="arch-col">
+      <h4>⚛️ Frontend (Next.js 14)</h4>
+      <ul>
+        <li><span class="dot dot-amber"></span> Board — Token listing + quote filter</li>
+        <li><span class="dot dot-purple"></span> Launch — Create token wizard</li>
+        <li><span class="dot dot-cyan"></span> Trade — Buy/sell with live charts</li>
+        <li><span class="dot dot-green"></span> Transparency — Reserves dashboard</li>
+        <li><span class="dot dot-red"></span> Analytics — Burn stats + leaderboard</li>
+      </ul>
+    </div>
+    <div class="arch-col">
+      <h4>🔧 Infrastructure</h4>
+      <ul>
+        <li><span class="dot dot-amber"></span> Helius RPC (mainnet)</li>
+        <li><span class="dot dot-purple"></span> Irys/Arweave image storage</li>
+        <li><span class="dot dot-cyan"></span> Server-side API routes (rate-limited)</li>
+        <li><span class="dot dot-green"></span> Anchor IDL + raw deserialization</li>
+        <li><span class="dot dot-red"></span> TransferHook sweep cranker</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 7: Code Stats -->
+<div class="slide" data-slide="6">
+  <h2 style="text-align:center;"><span class="gradient-text">Codebase</span> Overview</h2>
+  
+  <div class="stats-row">
+    <div class="stat">
+      <div class="value gradient-text">22,750+</div>
+      <div class="label">Lines of Code</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color: var(--accent2);">4</div>
+      <div class="label">Solana Programs</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color: var(--accent3);">14</div>
+      <div class="label">Instructions</div>
+    </div>
+    <div class="stat">
+      <div class="value" style="color: var(--green);">6</div>
+      <div class="label">Account Types</div>
+    </div>
+  </div>
+  
+  <div class="two-col" style="margin-top: 48px;">
+    <div>
+      <h4 style="margin-bottom: 16px; color: var(--accent);">📦 Breakdown</h4>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 2;">
+        <div>Rust (Anchor)    <span style="color: var(--accent);">━━━━━━━━━━━━</span> 7,026</div>
+        <div>Frontend (React) <span style="color: var(--accent2);">━━━━━━━━━━━━</span> 6,846</div>
+        <div>Scripts (TS)     <span style="color: var(--accent3);">━━━━━━━━━━━━</span> 6,834</div>
+        <div>Tests            <span style="color: var(--green);">━━━━━━━━</span> 2,040</div>
+      </div>
+    </div>
+    <div>
+      <h4 style="margin-bottom: 16px; color: var(--accent2);">🗂️ Key Files</h4>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 2; color: var(--muted);">
+        <div>state.rs       <span style="color: var(--text);">6 account structs + AMM</span></div>
+        <div>buy.rs         <span style="color: var(--text);">Multi-quote buy handler</span></div>
+        <div>sell.rs        <span style="color: var(--text);">Multi-quote sell handler</span></div>
+        <div>graduate.rs    <span style="color: var(--text);">Meteora DAMM v2 CPI</span></div>
+        <div>execute_hook.rs <span style="color: var(--text);">Transfer hook logic</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8: AMM Formula -->
+<div class="slide" data-slide="7">
+  <h2 style="text-align:center;">Bonding Curve <span class="gradient-text">AMM</span></h2>
+  <h3 style="text-align: center;">Constant-product formula (pump.fun style)</h3>
+
+  <div class="code-block"><span class="cmt">// Constant-product AMM: k = VP × VT</span>
+<span class="kw">fn</span> <span class="fn">calculate_buy</span>(vp: <span class="type">u64</span>, vt: <span class="type">u64</span>, quote_in: <span class="type">u64</span>) -> <span class="type">u64</span> {
+    <span class="kw">let</span> k = (vp <span class="kw">as</span> <span class="type">u128</span>) * (vt <span class="kw">as</span> <span class="type">u128</span>);
+    <span class="kw">let</span> new_vp = vp + quote_in;
+    <span class="kw">let</span> new_vt = k / new_vp;
+    <span class="kw">let</span> tokens_out = vt - new_vt;  <span class="cmt">// tokens to buyer</span>
+    tokens_out
+}
+
+<span class="cmt">// Virtual reserves provide initial liquidity without real tokens</span>
+<span class="cmt">// VP = 843,800 PIGEON (configurable per quote asset)</span>
+<span class="cmt">// VT = 1,073,000,000 tokens</span>
+<span class="cmt">// Real reserves track actual deposited amounts</span>
+<span class="cmt">// Graduation triggers when real_quote >= threshold</span></div>
+  
+  <div style="margin-top: 32px; text-align: center;">
+    <p style="font-size: 0.9rem;">
+      <strong style="color: var(--accent);">Price Discovery:</strong> Early buyers get more tokens per unit.<br>
+      As demand grows, price increases along the curve.<br>
+      <strong style="color: var(--green);">Fair launch</strong> — no presale, no team allocation.
+    </p>
+  </div>
+</div>
+
+<!-- 9: PDA Architecture -->
+<div class="slide" data-slide="8">
+  <h2 style="text-align:center;">On-Chain <span class="gradient-text-2">PDAs</span></h2>
+  
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card">
+      <h4 style="color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">GlobalConfig</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "pigeon_house_config"<br>
+        authority, VP, VT, grad_amount<br>
+        total_burned, token_count
+      </p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--accent2); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">BondingCurve</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "bonding_curve" + mint<br>
+        reserves, supply, quote_mint<br>
+        complete, creator, bump
+      </p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--accent3); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">QuoteAssetConfig</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "quote_asset" + mint<br>
+        fee_bps, thresholds, kind<br>
+        enabled, decimals, symbol
+      </p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">StrategicReserve</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "strategic_reserve" + mint<br>
+        total_accrued, total_withdrawn<br>
+        authority, quote_mint
+      </p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">BurnAccrualVault</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "burn_accrual" + mint<br>
+        total_accrued, total_swept<br>
+        cranker sweep → burn path
+      </p>
+    </div>
+    <div class="card">
+      <h4 style="color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">FeeVault + HookConfig</h4>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 2; color: var(--muted);">
+        seed: "fee_vault" / "hook_config"<br>
+        PIGEON burn ATA, hook state<br>
+        fee_accrual per-mint scoped
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 10: Graduation Flow -->
+<div class="slide" data-slide="9">
+  <h2 style="text-align:center;">Graduation <span class="gradient-text">Flow</span></h2>
+  <h3 style="text-align: center;">From bonding curve to DEX liquidity</h3>
+
+  <div class="flow" style="margin-top: 32px;">
+    <div class="flow-step">
+      <div class="num">Trigger</div>
+      <div class="label">📊 Threshold Met</div>
+      <div class="sub">~2.36M PIGEON raised</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight">
+      <div class="num">On-Chain</div>
+      <div class="label">🌊 Create DEX Pool</div>
+      <div class="sub">Meteora DAMM v2 CPI</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="num">Lock</div>
+      <div class="label">🔒 LP → Dead Wallet</div>
+      <div class="sub">Position NFT burned</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="num">Activate</div>
+      <div class="label">🪝 TransferHook ON</div>
+      <div class="sub">0.25% fee on transfers</div>
+    </div>
+  </div>
+  
+  <div style="margin-top: 40px; text-align: center;">
+    <p style="font-size: 0.9rem; max-width: 700px; margin: 0 auto;">
+      <strong style="color: var(--accent);">Permissionless:</strong> Anyone can trigger graduation once threshold is met.<br>
+      <strong style="color: var(--green);">LP locked forever:</strong> Position NFT sent to <code>1nc1nerator111...</code> (dead wallet).<br>
+      <strong style="color: var(--accent2);">Creator reward:</strong> 0.5% of raised PIGEON goes to creator.
+    </p>
+  </div>
+</div>
+
+<!-- 11: TransferHook -->
+<div class="slide" data-slide="10">
+  <h2 style="text-align:center;">Transfer <span class="gradient-text-2">Hook</span></h2>
+  <h3 style="text-align: center;">Token-2022 extension — post-graduation fee engine</h3>
+  
+  <div class="two-col">
+    <div>
+      <div class="code-block" style="font-size: 0.78rem;"><span class="cmt">// Token-2022 calls hook on every transfer_checked</span>
+<span class="kw">pub fn</span> <span class="fn">execute</span>(ctx, amount) {
+    <span class="cmt">// Pre-graduation: passive (no-op)</span>
+    <span class="kw">if</span> !config.active { <span class="kw">return</span> Ok(()); }
+    
+    <span class="cmt">// Post-graduation: accrue 0.25% fee</span>
+    <span class="kw">let</span> fee = amount * <span class="num">25</span> / <span class="num">10_000</span>;
+    vault.total_accrued += fee;
+    
+    <span class="cmt">// Non-reverting: errors → Ok(()) + log</span>
+    <span class="cmt">// Never blocks user transfers</span>
+}
+
+<span class="cmt">// Sweep: cranker calls periodically</span>
+<span class="kw">pub fn</span> <span class="fn">sweep_fee_accrual</span>(ctx, route_data) {
+    <span class="cmt">// On-chain Jupiter swap → PIGEON</span>
+    <span class="cmt">// burn_checked → reduce supply</span>
+    <span class="cmt">// Permissionless, single-mint</span>
+}</div>
+    </div>
+    <div>
+      <h4 style="margin-bottom: 20px;">Key Design Decisions</h4>
+      <ul style="list-style: none; line-height: 2.2; font-size: 0.9rem;">
+        <li><span class="dot dot-green" style="margin-right: 8px;"></span> <strong>Non-reverting:</strong> Never blocks transfers</li>
+        <li><span class="dot dot-amber" style="margin-right: 8px;"></span> <strong>Parametric mint:</strong> Not hardcoded</li>
+        <li><span class="dot dot-purple" style="margin-right: 8px;"></span> <strong>Per-mint scoped:</strong> FeeAccrualVault per token</li>
+        <li><span class="dot dot-cyan" style="margin-right: 8px;"></span> <strong>Jupiter CPI:</strong> On-chain swap + burn</li>
+        <li><span class="dot dot-red" style="margin-right: 8px;"></span> <strong>Permissionless sweep:</strong> Anyone can crank</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 12: Security Audit -->
+<div class="slide" data-slide="11">
+  <h2 style="text-align:center;">Security <span class="gradient-text">Audit</span></h2>
+  <h3 style="text-align: center;">2026-03-10 — Full codebase review</h3>
+
+  <div style="display: flex; gap: 48px; align-items: center; margin-top: 20px;">
+    <div class="score-ring">
+      <svg viewBox="0 0 200 200">
+        <circle class="score-bg" />
+        <circle class="score-fg" />
+      </svg>
+      <div class="score-text">
+        <div class="num" style="color: var(--green);">8.3</div>
+        <div class="of">/ 10</div>
+      </div>
+    </div>
+    
+    <div style="flex: 1;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Access Control</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--green);">8/10</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Arithmetic Safety</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--green);">9/10</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">State Management</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--green);">8/10</div>
+        </div>
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+          <div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Frontend / SDK</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: var(--green);">8/10</div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="badge badge-green">✅ 0 unwrap()</span>
+        <span class="badge badge-green">✅ checked_* math</span>
+        <span class="badge badge-green">✅ PDA validated</span>
+        <span class="badge badge-green">✅ Rate limited APIs</span>
+        <span class="badge badge-amber">⚠️ 2 critical fixed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13: Timeline -->
+<div class="slide" data-slide="12">
+  <h2 style="text-align:center;">Development <span class="gradient-text">Timeline</span></h2>
+  
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-date">Feb 2026</div>
+      <div class="tl-content">
+        <h4>🔥 Burn Router Launch</h4>
+        <p>PIGEON burn router deployed to mainnet. First deflationary mechanism.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Early Mar</div>
+      <div class="tl-content">
+        <h4>🏠 PigeonHouse v1</h4>
+        <p>Bonding curve launchpad. PIGEON-only. 7 instructions. Devnet tested.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Mar 6</div>
+      <div class="tl-content">
+        <h4>🪝 TransferHook + Devnet E2E</h4>
+        <p>Full flow tested: create → buy → sell → graduate → hook active.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Mar 9</div>
+      <div class="tl-content">
+        <h4>🚀 Mainnet Deploy</h4>
+        <p>PigeonHouse + Hook program live. 16 tokens launched. Bug fixes deployed same day.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">Mar 10</div>
+      <div class="tl-content">
+        <h4>🌊 Multi-Quote + Audit</h4>
+        <p>SOL/SKR rails added. 14 instructions. Full security audit: 8.3/10. Data migration for 16 tokens.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14: Summary -->
+<div class="slide" data-slide="13">
+  <div style="text-align: center;">
+    <div style="font-size: 4rem; margin-bottom: 16px;">🐦🔥</div>
+    <h1><span class="gradient-text">PigeonHouse</span></h1>
+    <h3 style="text-align: center; max-width: 500px; margin: 0 auto;">
+      Every trade burns. Every token launched<br>makes PIGEON more scarce.
+    </h3>
+    
+    <div class="stats-row" style="margin-top: 48px;">
+      <div class="stat">
+        <div class="value" style="color: var(--accent);">16</div>
+        <div class="label">Tokens Launched</div>
+      </div>
+      <div class="stat">
+        <div class="value" style="color: var(--red);">157+</div>
+        <div class="label">PIGEON Burned</div>
+      </div>
+      <div class="stat">
+        <div class="value" style="color: var(--accent2);">3</div>
+        <div class="label">Quote Assets</div>
+      </div>
+      <div class="stat">
+        <div class="value" style="color: var(--green);">8.3</div>
+        <div class="label">Audit Score</div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 48px; display: flex; gap: 16px; justify-content: center;">
+      <span class="badge badge-amber" style="font-size: 0.85rem; padding: 8px 20px;">Solana Mainnet</span>
+      <span class="badge badge-purple" style="font-size: 0.85rem; padding: 8px 20px;">Token-2022</span>
+      <span class="badge badge-cyan" style="font-size: 0.85rem; padding: 8px 20px;">Anchor Framework</span>
+      <span class="badge badge-green" style="font-size: 0.85rem; padding: 8px 20px;">Next.js 14</span>
+    </div>
+    
+    <p style="margin-top: 40px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--muted);">
+      BV1RxkAaD5DjXMsnofkVikFUUYdrDg1v8YgsQ3iyDNoL
+    </p>
+  </div>
+</div>
+
+</div><!-- /slides -->
+
+<!-- Navigation dots -->
+<div class="slide-nav" id="nav"></div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('counter');
+const nav = document.getElementById('nav');
+let current = 0;
+
+// Create dots
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goTo(i);
+  nav.appendChild(dot);
+});
+
+function goTo(n) {
+  if (n < 0 || n >= slides.length || n === current) return;
+  slides[current].classList.remove('active');
+  slides[current].classList.add(n > current ? 'prev' : '');
+  setTimeout(() => slides[current === n ? current : current].classList.remove('prev'), 600);
+  
+  const prev = current;
+  current = n;
+  slides[current].classList.add('active');
+  
+  // Update counter
+  counter.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+  
+  // Update dots
+  document.querySelectorAll('.slide-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+  });
+}
+
+// Keyboard nav
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(slides.length - 1);
+});
+
+// Click nav
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.slide-dot') || e.target.closest('.slide-nav')) return;
+  const x = e.clientX;
+  if (x > window.innerWidth * 0.6) goTo(current + 1);
+  else if (x < window.innerWidth * 0.4) goTo(current - 1);
+});
+
+// Touch nav
+let touchStart = 0;
+document.addEventListener('touchstart', (e) => { touchStart = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStart - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) goTo(current + 1);
+    else goTo(current - 1);
+  }
+});
+
+// Particles
+const particleContainer = document.getElementById('particles');
+for (let i = 0; i < 30; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.animationDuration = (8 + Math.random() * 12) + 's';
+  p.style.animationDelay = (Math.random() * 10) + 's';
+  p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+  particleContainer.appendChild(p);
+}
+</script>
+</body>
+</html>
