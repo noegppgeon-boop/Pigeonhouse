@@ -266,8 +266,8 @@ export default function TokenPage() {
             </h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               <InfoRow label="Total Supply" value={formatToken(curve.tokenTotalSupply)} />
-              <InfoRow label="Real Reserves" value={formatPigeon(curve.realPigeonReserves)} />
-              <InfoRow label="Virtual PIGEON" value={formatPigeon(curve.virtualPigeonReserves)} />
+              <InfoRow label="Real Reserves" value={`${formatQuote(curve.realPigeonReserves)} ${quoteSymbol}`} />
+              <InfoRow label={`Virtual ${quoteSymbol}`} value={formatQuote(curve.virtualPigeonReserves)} />
               <InfoRow label="Virtual Token" value={formatToken(curve.virtualTokenReserves)} />
             </div>
             <div className="border-t border-[var(--border)] pt-2">

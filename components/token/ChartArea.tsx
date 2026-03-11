@@ -84,16 +84,16 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
   return candles;
 }
 
-/* ── Theme ── */
+/* ── Theme (parchment palette) ── */
 const CHART_COLORS = {
-  bg: "#131722",
-  gridLines: "#1e222d",
-  text: "#787b86",
-  crosshair: "#9598a1",
-  upColor: "#26a69a",
-  downColor: "#ef5350",
-  volumeUp: "rgba(38, 166, 154, 0.25)",
-  volumeDown: "rgba(239, 83, 80, 0.25)",
+  bg: "#EDE8DD",
+  gridLines: "#D9D3C7",
+  text: "#6B6560",
+  crosshair: "#A67C52",
+  upColor: "#1A7A6D",
+  downColor: "#8B2500",
+  volumeUp: "rgba(26, 122, 109, 0.2)",
+  volumeDown: "rgba(139, 37, 0, 0.2)",
 };
 
 /* ── Main component ── */
@@ -154,8 +154,8 @@ export default function ChartArea({ mint }: { mint?: string }) {
         },
         crosshair: {
           mode: lc.CrosshairMode.Normal,
-          vertLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#2a2e39" },
-          horzLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#2a2e39" },
+          vertLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#A67C52" },
+          horzLine: { color: CHART_COLORS.crosshair, width: 1, style: lc.LineStyle.Dashed, labelBackgroundColor: "#A67C52" },
         },
         rightPriceScale: {
           borderColor: CHART_COLORS.gridLines,
@@ -281,7 +281,7 @@ export default function ChartArea({ mint }: { mint?: string }) {
               </span>
               <span
                 className={`font-semibold ${
-                  priceChange >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"
+                  priceChange >= 0 ? "text-teal" : "text-crimson"
                 }`}
               >
                 {priceChange >= 0 ? "+" : ""}
@@ -292,15 +292,15 @@ export default function ChartArea({ mint }: { mint?: string }) {
         </div>
 
         {/* Timeframe buttons */}
-        <div className="flex gap-0.5 bg-[#131722] rounded-md p-0.5 border border-[#1e222d]">
+        <div className="flex gap-0.5 bg-bg-elevated rounded-md p-0.5 border border-border">
           {(Object.keys(TF_LABELS) as Timeframe[]).map((t) => (
             <button
               key={t}
               onClick={() => setTf(t)}
               className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${
                 tf === t
-                  ? "bg-[#2a2e39] text-[#d1d4dc] shadow-sm"
-                  : "text-[#787b86] hover:text-[#d1d4dc]"
+                  ? "bg-bg-card text-txt shadow-sm"
+                  : "text-txt-muted hover:text-txt-secondary"
               }`}
             >
               {TF_LABELS[t]}
@@ -318,9 +318,9 @@ export default function ChartArea({ mint }: { mint?: string }) {
         )}
         {!loading && candles.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ height: 400, background: CHART_COLORS.bg }}>
-            <BarChart3 className="h-6 w-6 text-[#787b86] mb-3" />
-            <p className="text-[12px] text-[#d1d4dc] font-medium">Awaiting first trade</p>
-            <p className="text-[10px] text-[#787b86] font-lore italic mt-1">The chart awakens with the first offering</p>
+            <BarChart3 className="h-6 w-6 text-txt-muted mb-3" />
+            <p className="text-[12px] text-txt-secondary font-medium">Awaiting first trade</p>
+            <p className="text-[10px] text-txt-muted font-lore italic mt-1">The chart awakens with the first offering</p>
           </div>
         )}
         <div

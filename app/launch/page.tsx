@@ -200,7 +200,7 @@ export default function LaunchPage() {
                     <QuoteSelector selected={selectedQuote} onSelect={setSelectedQuote} />
 
                     {/* Fee Preview */}
-                    <FeeBreakdown quote={selectedQuote} className="p-3 rounded-lg bg-white/5 border border-white/10" />
+                    <FeeBreakdown quote={selectedQuote} className="p-3 rounded-lg bg-bg-elevated border border-border" />
 
                     {/* Name + Symbol */}
                     <div className="grid grid-cols-5 gap-3">
