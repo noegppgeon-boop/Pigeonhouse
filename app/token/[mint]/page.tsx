@@ -22,6 +22,7 @@ import { QuoteBadge } from "@/components/shared/QuoteBadge";
 import { getQuoteAssetByMint } from "@/lib/constants";
 import BN from "bn.js";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { useUsdPrices, toUsd } from "@/hooks/useUsdPrices";
 
 function getStatus(progress: number, complete: boolean) {
   if (complete) return { label: "Ascended", color: "text-teal", bg: "bg-teal/8 border-teal/20" };
@@ -41,6 +42,7 @@ export default function TokenPage() {
     useBondingCurve(mintAddress);
   const tokenImage = useTokenImage(curve?.uri);
   const referrer = searchParams.get("ref") || null;
+  const usdPrices = useUsdPrices();
 
   const [copied, setCopied] = useState(false);
   const [mintCopied, setMintCopied] = useState(false);
@@ -108,6 +110,7 @@ export default function TokenPage() {
   const quoteAsset = curve.quoteMint ? getQuoteAssetByMint(curve.quoteMint.toBase58()) : undefined;
   const quoteSymbol = quoteAsset?.symbol ?? "PIGEON";
   const quoteDecimals = quoteAsset?.decimals ?? 6;
+  const quoteKey = quoteSymbol.toLowerCase() as "pigeon" | "sol" | "skr";
   const remaining = config.graduationPigeonAmount.sub(curve.realPigeonReserves);
   const formatQuote = (amt: BN) => {
     const val = amt.toNumber() / Math.pow(10, quoteDecimals);
@@ -218,8 +221,21 @@ export default function TokenPage() {
           SUMMARY METRICS
          ══════════════════════════════════ */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-        <MetricCard label="Price" value={price < 0.001 ? price.toExponential(2) : price.toFixed(6)} unit={quoteSymbol} icon={TrendingUp} color="text-txt" />
-        <MetricCard label="Market Cap" value={formatNumber(mcap && typeof mcap.toNumber === 'function' ? mcap.toNumber() / Math.pow(10, quoteDecimals) : (typeof mcap === 'number' ? mcap : 0))} unit={quoteSymbol} icon={BarChart3} color="text-bronze" />
+        <MetricCard label="Price" value={(() => {
+          const usd = toUsd(price, quoteKey, usdPrices);
+          if (usd > 0 && usd < 0.000001) return usd.toExponential(2);
+          if (usd > 0 && usd < 0.01) return `${usd.toFixed(6)}`;
+          if (usd > 0) return `${usd.toFixed(4)}`;
+          return price < 0.001 ? price.toExponential(2) : price.toFixed(6);
+        })()} unit={usdPrices.pigeon > 0 ? "USD" : quoteSymbol} icon={TrendingUp} color="text-txt" />
+        <MetricCard label="Market Cap" value={(() => {
+          try {
+            const mcapQuote = (mcap?.toNumber?.() ?? 0) / Math.pow(10, quoteDecimals);
+            const mcapUsd = toUsd(mcapQuote, quoteKey, usdPrices);
+            if (mcapUsd > 0) return `$${formatNumber(mcapUsd)}`;
+            return formatNumber(mcapQuote);
+          } catch { return "0"; }
+        })()} unit={usdPrices.pigeon > 0 ? "" : quoteSymbol} icon={BarChart3} color="text-bronze" />
         <MetricCard label="Ascension" value={`${progress.toFixed(1)}%`} unit={isComplete ? "Ascended" : `${formatQuote(remaining)} ${quoteSymbol} to go`} icon={Target} color="text-crimson" />
         <MetricCard label="Est. Burned" value={formatNumber(burnedEstimate)} unit="PIGEON 🔥" icon={Flame} color="text-crimson" />
         <MetricCard label="Reserves" value={formatNumber(curve.realPigeonReserves.toNumber() / Math.pow(10, quoteDecimals))} unit={quoteSymbol} icon={Zap} color="text-teal" />
