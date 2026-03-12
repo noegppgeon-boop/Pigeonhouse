@@ -689,7 +689,10 @@ body {
   .hide-desktop { display: none; }
 }
 
-/* Wallet adapter overrides */
+/* ═══════════════════════════════════════
+   WALLET ADAPTER — Full Theme Override
+   ═══════════════════════════════════════ */
+
 .wallet-adapter-button {
   background: var(--crimson) !important;
   color: #F5F0E8 !important;
@@ -698,6 +701,100 @@ body {
   font-weight: 600 !important;
   font-size: 13px !important;
   height: 36px !important;
+}
+.wallet-adapter-button:hover {
+  opacity: 0.88 !important;
+}
+
+/* Modal overlay */
+.wallet-adapter-modal-overlay {
+  background: rgba(44, 40, 37, 0.70) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Modal wrapper */
+.wallet-adapter-modal-wrapper {
+  background: var(--obsidian) !important;
+  border: 1px solid var(--obsidian-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  max-width: 400px !important;
+}
+
+/* Modal title */
+.wallet-adapter-modal-title {
+  font-family: 'Crimson Text', 'Georgia', serif !important;
+  color: var(--obsidian-text) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+/* Wallet list */
+.wallet-adapter-modal-list {
+  margin: 0 !important;
+}
+
+/* Individual wallet buttons in modal */
+.wallet-adapter-modal-list li {
+  margin: 0 !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: transparent !important;
+  color: var(--obsidian-text) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  height: 48px !important;
+  padding: 8px 12px !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  width: 100% !important;
+  border: 1px solid transparent !important;
+  transition: all 0.12s ease !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: rgba(139,37,0,0.12) !important;
+  border-color: rgba(139,37,0,0.25) !important;
+  opacity: 1 !important;
+}
+
+/* "More options" / collapse button */
+.wallet-adapter-modal-list-more {
+  color: var(--text-tertiary) !important;
+  cursor: pointer !important;
+  transition: color 0.12s ease !important;
+}
+.wallet-adapter-modal-list-more:hover {
+  color: var(--obsidian-text) !important;
+}
+.wallet-adapter-modal-list-more svg {
+  fill: currentColor !important;
+}
+
+/* Close button */
+.wallet-adapter-modal-button-close {
+  background: transparent !important;
+  color: #9C9590 !important;
+  transition: color 0.12s ease !important;
+}
+.wallet-adapter-modal-button-close:hover {
+  color: var(--obsidian-text) !important;
+}
+
+/* Middle section / "new to solana" */
+.wallet-adapter-modal-middle {
+  display: none !important;
+}
+
+/* Wallet icon sizing */
+.wallet-adapter-modal-list .wallet-adapter-button img,
+.wallet-adapter-modal-list .wallet-adapter-button .wallet-adapter-icon {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
 }
 
 /* ═══════════════════════════════════════

@@ -4,6 +4,7 @@ import WalletProvider from "@/components/WalletProvider";
 import { Sidebar, BottomNav, MobileTopBar } from "@/components/layout/Sidebar";
 import { ToastProvider } from "@/components/shared/Toast";
 import CommandModal from "@/components/shared/CommandModal";
+import WalletGate from "@/components/shared/WalletGate";
 
 export const metadata: Metadata = {
   title: "PigeonHouse — Ritual Launch Terminal",
@@ -33,9 +34,11 @@ export default function RootLayout({
 
             {/* Main content — offset by sidebar on desktop, topbar on mobile */}
             <main id="main-content" role="main" className="min-h-screen pt-12 md:pt-0 md:pl-sidebar pb-16 md:pb-0">
-              <div className="mx-auto max-w-[1100px] px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
-                {children}
-              </div>
+              <WalletGate>
+                <div className="mx-auto max-w-[1100px] px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
+                  {children}
+                </div>
+              </WalletGate>
             </main>
 
             {/* Mobile bottom nav */}

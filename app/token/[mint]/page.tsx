@@ -14,6 +14,7 @@ import { useBondingCurve } from "@/hooks/useBondingCurve";
 import TradePanel from "@/components/token/TradePanel";
 import ChartArea from "@/components/token/ChartArea";
 import RecentTrades from "@/components/token/RecentTrades";
+import TokenChat from "@/components/token/TokenChat";
 import { formatPigeon, formatToken } from "@/lib/pigeon_house";
 import { Skeleton } from "@/components/shared/Skeleton";
 import { formatNumber, shortenAddress, timeAgo } from "@/lib/utils";
@@ -300,6 +301,7 @@ export default function TokenPage() {
             quoteSymbol={quoteSymbol}
           />
           <RecentTrades mint={mintAddress} quoteSymbol={quoteSymbol} />
+          <TokenChat mint={mintAddress} />
 
           {/* Token Info */}
           <div className="card p-4 space-y-3">
