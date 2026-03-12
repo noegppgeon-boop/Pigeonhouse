@@ -162,11 +162,11 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
-  const mainSeriesRef = useRef<any>(null);
+  const candleSeriesRef = useRef<any>(null);
+  const areaSeriesRef = useRef<any>(null);
   const volumeSeriesRef = useRef<any>(null);
   const [chartReady, setChartReady] = useState(false);
   const initialFitDone = useRef(false);
-  const prevTfRef = useRef<Timeframe | null>(null);
 
   // Fetch trades
   useEffect(() => {
@@ -212,23 +212,9 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
 
   const isTickMode = activeTf === "TICK";
 
-  // Create / recreate chart when TF type changes (tick vs time-based)
+  // Create chart once
   useEffect(() => {
     if (!chartContainerRef.current) return;
-
-    // Destroy old chart
-    if (chartRef.current) {
-      const ro = (chartRef.current as any).__ro;
-      const container = (chartRef.current as any).__container;
-      if (ro && container) ro.unobserve(container);
-      ro?.disconnect();
-      chartRef.current.remove();
-      chartRef.current = null;
-      mainSeriesRef.current = null;
-      volumeSeriesRef.current = null;
-      setChartReady(false);
-    }
-
     let disposed = false;
 
     import("lightweight-charts").then((lc) => {
@@ -258,7 +244,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         },
         timeScale: {
           borderColor: CHART_COLORS.gridLines,
-          timeVisible: !isTickMode,
+          timeVisible: true,
           secondsVisible: false,
           barSpacing: 24,
           minBarSpacing: 4,
@@ -268,29 +254,26 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         handleScroll: { vertTouchDrag: false },
       });
 
-      // Tick mode → area chart (smooth line), time mode → candlestick
-      let mainSeries: any;
-      if (isTickMode) {
-        mainSeries = chart.addAreaSeries({
-          topColor: "rgba(26, 122, 109, 0.4)",
-          bottomColor: "rgba(26, 122, 109, 0.04)",
-          lineColor: "#1A7A6D",
-          lineWidth: 2,
-          crosshairMarkerVisible: true,
-          crosshairMarkerRadius: 4,
-          crosshairMarkerBackgroundColor: "#1A7A6D",
-        });
-      } else {
-        mainSeries = chart.addCandlestickSeries({
-          upColor: CHART_COLORS.upColor,
-          downColor: CHART_COLORS.downColor,
-          wickUpColor: CHART_COLORS.upColor,
-          wickDownColor: CHART_COLORS.downColor,
-          borderUpColor: CHART_COLORS.upColor,
-          borderDownColor: CHART_COLORS.downColor,
-          borderVisible: false,
-        });
-      }
+      // Create both series — we'll toggle visibility
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: CHART_COLORS.upColor,
+        downColor: CHART_COLORS.downColor,
+        wickUpColor: CHART_COLORS.upColor,
+        wickDownColor: CHART_COLORS.downColor,
+        borderUpColor: CHART_COLORS.upColor,
+        borderDownColor: CHART_COLORS.downColor,
+        borderVisible: false,
+      });
+
+      const areaSeries = chart.addAreaSeries({
+        topColor: "rgba(26, 122, 109, 0.4)",
+        bottomColor: "rgba(26, 122, 109, 0.04)",
+        lineColor: "#1A7A6D",
+        lineWidth: 2,
+        crosshairMarkerVisible: true,
+        crosshairMarkerRadius: 4,
+        crosshairMarkerBackgroundColor: "#1A7A6D",
+      });
 
       const volumeSeries = chart.addHistogramSeries({
         priceFormat: { type: "volume" },
@@ -301,9 +284,9 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       });
 
       chartRef.current = chart;
-      mainSeriesRef.current = mainSeries;
+      candleSeriesRef.current = candleSeries;
+      areaSeriesRef.current = areaSeries;
       volumeSeriesRef.current = volumeSeries;
-      initialFitDone.current = false;
       setChartReady(true);
 
       const ro = new ResizeObserver((entries) => {
@@ -314,16 +297,8 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       (chart as any).__container = chartContainerRef.current;
     });
 
-    prevTfRef.current = activeTf;
-
     return () => {
       disposed = true;
-    };
-  }, [isTickMode]); // Recreate only when switching tick↔time
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
       if (chartRef.current) {
         const ro = (chartRef.current as any).__ro;
         const container = (chartRef.current as any).__container;
@@ -331,31 +306,39 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         ro?.disconnect();
         chartRef.current.remove();
         chartRef.current = null;
+        candleSeriesRef.current = null;
+        areaSeriesRef.current = null;
+        volumeSeriesRef.current = null;
+        setChartReady(false);
+        initialFitDone.current = false;
       }
     };
   }, []);
 
-  // Update data
+  // Update data — toggle between area (tick) and candlestick (time)
   useEffect(() => {
-    if (!chartReady || !mainSeriesRef.current || !volumeSeriesRef.current) return;
+    if (!chartReady || !candleSeriesRef.current || !areaSeriesRef.current || !volumeSeriesRef.current) return;
 
     if (isTickMode) {
-      // Area chart: use close price
-      const lineData = candles.map((c) => ({
-        time: c.time as any,
-        value: c.c,
-      }));
-      mainSeriesRef.current.setData(lineData);
+      // Show area, hide candles
+      const lineData = candles.map((c) => ({ time: c.time as any, value: c.c }));
+      areaSeriesRef.current.setData(lineData);
+      candleSeriesRef.current.setData([]); // clear candles
+
+      // Hide candle series visually
+      candleSeriesRef.current.applyOptions({ visible: false });
+      areaSeriesRef.current.applyOptions({ visible: true });
     } else {
-      // Candlestick
+      // Show candles, hide area
       const candleData = candles.map((c) => ({
         time: c.time as any,
-        open: c.o,
-        high: c.h,
-        low: c.l,
-        close: c.c,
+        open: c.o, high: c.h, low: c.l, close: c.c,
       }));
-      mainSeriesRef.current.setData(candleData);
+      candleSeriesRef.current.setData(candleData);
+      areaSeriesRef.current.setData([]); // clear area
+
+      candleSeriesRef.current.applyOptions({ visible: true });
+      areaSeriesRef.current.applyOptions({ visible: false });
     }
 
     const volumeData = candles.map((c) => ({
@@ -366,7 +349,10 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     volumeSeriesRef.current.setData(volumeData);
 
     if (chartRef.current) {
-      chartRef.current.timeScale().applyOptions({ barSpacing });
+      chartRef.current.timeScale().applyOptions({
+        barSpacing,
+        timeVisible: !isTickMode,
+      });
     }
 
     if (chartRef.current && candles.length > 0 && !initialFitDone.current) {
@@ -375,7 +361,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     }
   }, [candles, chartReady, barSpacing, isTickMode]);
 
-  // Reset fit on TF change (within same chart type)
+  // Reset fit on TF change
   useEffect(() => {
     if (chartRef.current && candles.length > 0 && userSetTf) {
       initialFitDone.current = false;
