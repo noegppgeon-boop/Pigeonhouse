@@ -23,26 +23,26 @@ interface Candle {
   tradeCount: number;
 }
 
-type Timeframe = "1M" | "5M" | "15M" | "1H" | "4H";
+type Timeframe = "TICK" | "1M" | "5M" | "15M" | "1H";
 
 const TF_SECONDS: Record<Timeframe, number> = {
+  "TICK": 0,  // special: 1 candle per trade
   "1M": 60,
   "5M": 300,
   "15M": 900,
   "1H": 3600,
-  "4H": 14400,
 };
 
 const TF_LABELS: Record<Timeframe, string> = {
+  "TICK": "Tick",
   "1M": "1m",
   "5M": "5m",
   "15M": "15m",
   "1H": "1H",
-  "4H": "4H",
 };
 
-/* ── Build candles ── */
-function buildCandles(trades: Trade[], tfSec: number): Candle[] {
+/* ── Build candles (time-based) ── */
+function buildTimeCandles(trades: Trade[], tfSec: number): Candle[] {
   if (!trades.length) return [];
   const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
   const buckets = new Map<number, Trade[]>();
@@ -71,15 +71,14 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
     });
   }
 
-  // Fill gaps between candles (max 50 gap candles to avoid bloat)
+  // Fill small gaps
   if (candles.length >= 2) {
     const filled: Candle[] = [candles[0]];
     for (let i = 1; i < candles.length; i++) {
       const prev = candles[i - 1];
       const curr = candles[i];
       const gapCount = Math.floor((curr.time - prev.time) / tfSec) - 1;
-      // Only fill small gaps (< 20 candles), skip big ones
-      if (gapCount > 0 && gapCount <= 20) {
+      if (gapCount > 0 && gapCount <= 10) {
         let t = prev.time + tfSec;
         while (t < curr.time) {
           filled.push({ time: t, o: prev.c, h: prev.c, l: prev.c, c: prev.c, volume: 0, tradeCount: 0 });
@@ -93,21 +92,48 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
   return candles;
 }
 
-/* ── Auto-select best timeframe based on trade spread ── */
-function autoTimeframe(trades: Trade[]): Timeframe {
-  if (trades.length < 2) return "5M";
-  const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
-  const span = sorted[sorted.length - 1].timestamp - sorted[0].timestamp;
+/* ── Build tick candles (1 candle per trade) ── */
+function buildTickCandles(trades: Trade[]): Candle[] {
+  if (!trades.length) return [];
+  const sorted = [...trades]
+    .filter(t => t.price > 0 && t.timestamp > 0)
+    .sort((a, b) => a.timestamp - b.timestamp);
 
-  // Target: 15-60 candles for good readability
-  if (span < 600) return "1M";       // < 10min
-  if (span < 3600) return "5M";      // < 1h
-  if (span < 14400) return "15M";    // < 4h
-  if (span < 86400) return "1H";     // < 24h
-  return "4H";
+  let prevClose = sorted[0].price;
+  return sorted.map((t, i) => {
+    const o = prevClose;
+    const c = t.price;
+    const h = Math.max(o, c);
+    const l = Math.min(o, c);
+    prevClose = c;
+    // Use index-based time so each trade gets its own candle
+    // lightweight-charts needs ascending unique times
+    const baseTime = sorted[0].timestamp;
+    return {
+      time: baseTime + i * 60, // fake 1-min spacing for display
+      o, h, l, c,
+      volume: t.pigeonAmount,
+      tradeCount: 1,
+    };
+  });
 }
 
-/* ── Theme (parchment palette) ── */
+/* ── Auto timeframe ── */
+function autoTimeframe(trades: Trade[]): Timeframe {
+  if (trades.length < 3) return "TICK";
+  const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+  const span = sorted[sorted.length - 1].timestamp - sorted[0].timestamp;
+  const density = trades.length / Math.max(span, 1);
+
+  // If all trades within 5 minutes or fewer than 10 trades, use tick
+  if (span < 300 || trades.length < 10) return "TICK";
+  if (span < 600) return "1M";
+  if (span < 3600) return "5M";
+  if (span < 14400) return "15M";
+  return "1H";
+}
+
+/* ── Theme ── */
 const CHART_COLORS = {
   bg: "#EDE8DD",
   gridLines: "#D9D3C7",
@@ -128,11 +154,10 @@ interface ChartProps {
   quoteSymbol?: string;
 }
 
-/* ── Main component ── */
 export default function ChartArea({ mint, progress = 0, isComplete = false, graduationThreshold = 0, currentReserves = 0, quoteSymbol = "PIGEON" }: ChartProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tf, setTf] = useState<Timeframe | null>(null); // null = auto
+  const [tf, setTf] = useState<Timeframe | null>(null);
   const [userSetTf, setUserSetTf] = useState(false);
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -160,26 +185,31 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     return () => { cancelled = true; clearInterval(iv); };
   }, [mint]);
 
-  // Auto-select timeframe when trades load (only if user hasn't manually chosen)
+  // Auto-select timeframe
   useEffect(() => {
     if (!userSetTf && trades.length > 0) {
       setTf(autoTimeframe(trades));
     }
   }, [trades, userSetTf]);
 
-  const activeTf = tf ?? "5M";
-  const candles = useMemo(() => buildCandles(trades, TF_SECONDS[activeTf]), [trades, activeTf]);
+  const activeTf = tf ?? "TICK";
+  const candles = useMemo(() => {
+    if (activeTf === "TICK") return buildTickCandles(trades);
+    return buildTimeCandles(trades, TF_SECONDS[activeTf]);
+  }, [trades, activeTf]);
 
-  // Calculate dynamic bar spacing based on candle count
+  // Dynamic bar spacing
   const barSpacing = useMemo(() => {
-    if (candles.length <= 5) return 40;
-    if (candles.length <= 15) return 24;
-    if (candles.length <= 40) return 16;
-    if (candles.length <= 80) return 10;
+    const n = candles.length;
+    if (n <= 3) return 60;
+    if (n <= 8) return 36;
+    if (n <= 15) return 24;
+    if (n <= 40) return 16;
+    if (n <= 80) return 10;
     return 6;
   }, [candles.length]);
 
-  // Create chart (dynamic import to avoid SSR)
+  // Create chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
     let disposed = false;
@@ -189,7 +219,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
 
       const chart = lc.createChart(chartContainerRef.current, {
         width: chartContainerRef.current.clientWidth,
-        height: 400,
+        height: 380,
         layout: {
           background: { type: lc.ColorType.Solid, color: CHART_COLORS.bg },
           textColor: CHART_COLORS.text,
@@ -213,7 +243,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
           borderColor: CHART_COLORS.gridLines,
           timeVisible: true,
           secondsVisible: false,
-          barSpacing: 16,
+          barSpacing: 24,
           minBarSpacing: 4,
           rightOffset: 3,
         },
@@ -245,7 +275,6 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       volumeSeriesRef.current = volumeSeries;
       setChartReady(true);
 
-      // Resize
       const ro = new ResizeObserver((entries) => {
         if (entries[0]) chart.applyOptions({ width: entries[0].contentRect.width });
       });
@@ -293,26 +322,29 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     candleSeriesRef.current.setData(candleData);
     volumeSeriesRef.current.setData(volumeData);
 
-    // Update bar spacing dynamically
     if (chartRef.current) {
-      chartRef.current.timeScale().applyOptions({ barSpacing });
+      chartRef.current.timeScale().applyOptions({
+        barSpacing,
+        // Hide time axis labels in tick mode (they're fake times)
+        timeVisible: activeTf !== "TICK",
+      });
     }
 
-    // Only fit content on first load, not on every refresh (preserves user zoom)
     if (chartRef.current && candles.length > 0 && !initialFitDone.current) {
       chartRef.current.timeScale().fitContent();
       initialFitDone.current = true;
     }
-  }, [candles, chartReady, barSpacing]);
+  }, [candles, chartReady, barSpacing, activeTf]);
 
-  // Reset fit when timeframe changes
+  // Reset fit on TF change
   useEffect(() => {
     if (chartRef.current && candles.length > 0 && userSetTf) {
+      initialFitDone.current = false;
       chartRef.current.timeScale().fitContent();
+      initialFitDone.current = true;
     }
   }, [activeTf]);
 
-  // Price helpers
   const formatPrice = useCallback((price: number) => {
     if (price === 0) return "0";
     if (price < 0.000001) return price.toExponential(2);
@@ -327,7 +359,6 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     lastCandle && firstCandle && firstCandle.o > 0
       ? ((lastCandle.c - firstCandle.o) / firstCandle.o) * 100
       : 0;
-
   const tradeCount = trades.length;
 
   return (
@@ -361,7 +392,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
             <button
               key={t}
               onClick={() => { setTf(t); setUserSetTf(true); initialFitDone.current = false; }}
-              className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${
+              className={`px-2 py-1 rounded text-[10px] font-semibold transition-all ${
                 activeTf === t
                   ? "bg-bg-card text-txt shadow-sm"
                   : "text-txt-muted hover:text-txt-secondary"
@@ -423,12 +454,12 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       {/* Chart */}
       <div style={{ position: "relative" }}>
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10" style={{ height: 400, background: CHART_COLORS.bg }}>
+          <div className="absolute inset-0 flex items-center justify-center z-10" style={{ height: 380, background: CHART_COLORS.bg }}>
             <div className="animate-spin h-5 w-5 border-2 border-crimson border-t-transparent rounded-full" />
           </div>
         )}
         {!loading && candles.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ height: 400, background: CHART_COLORS.bg }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ height: 380, background: CHART_COLORS.bg }}>
             <BarChart3 className="h-6 w-6 text-txt-muted mb-3" />
             <p className="text-[12px] text-txt-secondary font-medium">Awaiting first trade</p>
             <p className="text-[10px] text-txt-muted font-lore italic mt-1">The chart awakens with the first offering</p>
@@ -436,7 +467,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         )}
         <div
           ref={chartContainerRef}
-          style={{ width: "100%", height: 400, visibility: candles.length > 0 ? "visible" : "hidden" }}
+          style={{ width: "100%", height: 380, visibility: candles.length > 0 ? "visible" : "hidden" }}
         />
       </div>
     </div>
