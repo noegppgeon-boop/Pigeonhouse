@@ -21,7 +21,7 @@ export function QuoteBadge({ quote, quoteMint, compact, className = "" }: QuoteB
         compact ? "px-1 py-0.5" : "px-1.5 py-0.5"
       } ${className}`}
     >
-      <span>{asset.icon}</span>
+      <img src={asset.logo} alt={asset.symbol} className={compact ? "w-3.5 h-3.5 rounded-full" : "w-4 h-4 rounded-full"} />
       {!compact && <span>{asset.symbol}</span>}
     </span>
   );

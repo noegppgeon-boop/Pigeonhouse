@@ -339,7 +339,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
                 !payWithSol ? `${quoteAsset.colorClass} ${quoteAsset.textClass}` : "text-txt-muted hover:text-txt-secondary"
               }`}
             >
-              {quoteAsset.icon} {quoteSymbol}
+              <img src={quoteAsset.logo} alt={quoteSymbol} className="w-4 h-4 rounded-full inline" /> {quoteSymbol}
             </button>
             <button
               onClick={() => { setPayWithSol(true); setAmount(""); setError(null); }}
@@ -347,7 +347,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
                 payWithSol ? "bg-purple-500/15 text-purple-400" : "text-txt-muted hover:text-txt-secondary"
               }`}
             >
-              ◎ SOL
+              <img src="/tokens/sol.png" alt="SOL" className="w-4 h-4 rounded-full inline" /> SOL
             </button>
           </div>
         </div>
@@ -365,8 +365,10 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             onChange={(e) => { setAmount(e.target.value); setError(null); }}
             className="flex-1 bg-transparent text-xl font-mono text-txt outline-none placeholder:text-txt-muted [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
-          <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
-            {tab === "buy" ? (payWithSol ? "SOL" : quoteSymbol) : curve.symbol}
+          <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg flex items-center gap-1.5">
+            {tab === "buy" ? (
+              payWithSol ? <><img src="/tokens/sol.png" alt="SOL" className="w-4 h-4 rounded-full" /> SOL</> : <><img src={quoteAsset.logo} alt={quoteSymbol} className="w-4 h-4 rounded-full" /> {quoteSymbol}</>
+            ) : curve.symbol}
           </span>
         </div>
         {exceedsBalance && (

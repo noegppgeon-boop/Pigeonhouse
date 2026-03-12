@@ -62,6 +62,7 @@ export interface QuoteAssetInfo {
   mint: PublicKey;
   symbol: string;
   icon: string;
+  logo: string;
   decimals: number;
   color: string;
   colorClass: string;
@@ -75,6 +76,7 @@ export const QUOTE_ASSETS: Record<QuoteAssetKey, QuoteAssetInfo> = {
     mint: PIGEON_MINT,
     symbol: "PIGEON",
     icon: "🐦",
+    logo: "/tokens/pigeon.png",
     decimals: 6,
     color: "amber",
     colorClass: "bg-amber-500/20",
@@ -86,6 +88,7 @@ export const QUOTE_ASSETS: Record<QuoteAssetKey, QuoteAssetInfo> = {
     mint: SOL_MINT,
     symbol: "SOL",
     icon: "◎",
+    logo: "/tokens/sol.png",
     decimals: 9,
     color: "purple",
     colorClass: "bg-purple-500/20",
@@ -97,6 +100,7 @@ export const QUOTE_ASSETS: Record<QuoteAssetKey, QuoteAssetInfo> = {
     mint: SKR_MINT,
     symbol: "SKR",
     icon: "🔮",
+    logo: "/tokens/skr.png",
     decimals: 6,
     color: "teal",
     colorClass: "bg-teal-500/20",
