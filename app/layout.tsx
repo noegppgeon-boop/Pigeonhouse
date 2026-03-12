@@ -6,6 +6,7 @@ import TopBar from "@/components/layout/TopBar";
 import { ToastProvider } from "@/components/shared/Toast";
 import CommandModal from "@/components/shared/CommandModal";
 import WalletGate from "@/components/shared/WalletGate";
+import LaunchGate from "@/components/shared/LaunchGate";
 
 export const metadata: Metadata = {
   title: "PigeonHouse — Ritual Launch Terminal",
@@ -51,30 +52,33 @@ export default function RootLayout({
       <body className="min-h-screen bg-bg text-txt">
         <WalletProvider>
           <ToastProvider>
-            <a href="#main-content" className="skip-link">Skip to content</a>
+            {/* Launch countdown — blocks EVERYTHING until timer hits zero */}
+            <LaunchGate>
+              <a href="#main-content" className="skip-link">Skip to content</a>
 
-            {/* Desktop sidebar */}
-            <Sidebar />
+              {/* Desktop sidebar */}
+              <Sidebar />
 
-            {/* Desktop top-right wallet/profile */}
-            <TopBar />
+              {/* Desktop top-right wallet/profile */}
+              <TopBar />
 
-            {/* Mobile top bar */}
-            <MobileTopBar />
+              {/* Mobile top bar */}
+              <MobileTopBar />
 
-            <CommandModal />
+              <CommandModal />
 
-            {/* Main content — offset by sidebar on desktop, topbar on mobile */}
-            <main id="main-content" role="main" className="min-h-screen pt-12 md:pt-0 md:pl-sidebar pb-16 md:pb-0">
-              <WalletGate>
-                <div className="mx-auto max-w-[1100px] px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
-                  {children}
-                </div>
-              </WalletGate>
-            </main>
+              {/* Main content — offset by sidebar on desktop, topbar on mobile */}
+              <main id="main-content" role="main" className="min-h-screen pt-12 md:pt-0 md:pl-sidebar pb-16 md:pb-0">
+                <WalletGate>
+                  <div className="mx-auto max-w-[1100px] px-3 sm:px-4 lg:px-6 py-4 lg:py-6">
+                    {children}
+                  </div>
+                </WalletGate>
+              </main>
 
-            {/* Mobile bottom nav */}
-            <BottomNav />
+              {/* Mobile bottom nav */}
+              <BottomNav />
+            </LaunchGate>
           </ToastProvider>
         </WalletProvider>
       </body>
