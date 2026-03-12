@@ -241,6 +241,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         rightPriceScale: {
           borderColor: CHART_COLORS.gridLines,
           scaleMargins: { top: 0.08, bottom: 0.22 },
+          autoScale: true,
         },
         timeScale: {
           borderColor: CHART_COLORS.gridLines,
@@ -254,6 +255,20 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         handleScroll: { vertTouchDrag: false },
       });
 
+      // Price format for small numbers
+      const priceFormat = {
+        type: "custom" as const,
+        formatter: (price: number) => {
+          if (price === 0) return "0";
+          if (price < 0.000001) return price.toExponential(2);
+          if (price < 0.0001) return price.toFixed(8);
+          if (price < 0.01) return price.toFixed(6);
+          if (price < 1) return price.toFixed(4);
+          return price.toFixed(2);
+        },
+        minMove: 0.000001,
+      };
+
       // Create both series — we'll toggle visibility
       const candleSeries = chart.addCandlestickSeries({
         upColor: CHART_COLORS.upColor,
@@ -263,6 +278,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         borderUpColor: CHART_COLORS.upColor,
         borderDownColor: CHART_COLORS.downColor,
         borderVisible: false,
+        priceFormat,
       });
 
       const areaSeries = chart.addAreaSeries({
@@ -273,6 +289,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 4,
         crosshairMarkerBackgroundColor: "#1A7A6D",
+        priceFormat,
       });
 
       const volumeSeries = chart.addHistogramSeries({
