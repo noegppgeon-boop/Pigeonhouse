@@ -10,10 +10,34 @@ import WalletGate from "@/components/shared/WalletGate";
 export const metadata: Metadata = {
   title: "PigeonHouse — Ritual Launch Terminal",
   description:
-    "The deflationary token launchpad on Solana. Inscribe with trust, burn with proof, build with reputation.",
+    "The deflationary token launchpad on Solana. Every trade burns PIGEON. Inscribe with trust, burn with proof.",
   icons: {
     icon: "/tokens/pigeon.png",
     apple: "/tokens/pigeon.png",
+  },
+  openGraph: {
+    title: "PigeonHouse — Ritual Launch Terminal",
+    description: "The deflationary token launchpad on Solana. Every trade burns PIGEON. Launch tokens, trade on bonding curves, graduate to Raydium.",
+    url: "https://pigeon-house.vercel.app",
+    siteName: "PigeonHouse",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PigeonHouse — Ritual Launch Terminal",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PigeonHouse — Ritual Launch Terminal",
+    description: "The deflationary token launchpad on Solana. Every trade burns PIGEON 🔥",
+    images: ["/og-image.png"],
+    creator: "@941pigeondotfun",
+    site: "@941pigeondotfun",
   },
 };
 
