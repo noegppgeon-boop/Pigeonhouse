@@ -30,7 +30,7 @@ export default function WalletGate({ children }: { children: React.ReactNode }) 
               {/* Logo mark */}
               <div className="relative mb-6">
                 <img
-                  src="/logo-v1.png"
+                  src="/tokens/pigeon.png"
                   alt="PigeonHouse"
                   className="w-24 h-24 rounded-2xl shadow-md animate-float"
                 />

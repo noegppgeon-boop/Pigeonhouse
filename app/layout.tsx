@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description:
     "The deflationary token launchpad on Solana. Inscribe with trust, burn with proof, build with reputation.",
   icons: {
-    icon: "/logo-v1.png",
-    apple: "/logo-v1.png",
+    icon: "/tokens/pigeon.png",
+    apple: "/tokens/pigeon.png",
   },
 };
 

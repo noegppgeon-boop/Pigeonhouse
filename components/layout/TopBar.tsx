@@ -39,7 +39,7 @@ export default function TopBar() {
           onClick={() => setVisible(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-crimson text-[#F5F0E8] text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm animate-pulse-glow"
         >
-          <img src="/logo-v1.png" alt="" className="w-4 h-4 rounded-sm" />
+          <img src="/tokens/pigeon.png" alt="" className="w-4 h-4 rounded-sm" />
           Connect Wallet
         </button>
       </div>

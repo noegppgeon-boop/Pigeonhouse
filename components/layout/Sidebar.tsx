@@ -62,7 +62,7 @@ export function Sidebar() {
 
       {/* ── 1. Logotype ── */}
       <Link href="/" className="group flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
-        <img src="/logo-v1.png" alt="PigeonHouse" className="w-8 h-8 rounded-md shadow-sm transition-transform group-hover:scale-110 group-hover:animate-bounce-subtle" />
+        <img src="/tokens/pigeon.png" alt="PigeonHouse" className="w-8 h-8 rounded-md shadow-sm transition-transform group-hover:scale-110 group-hover:animate-bounce-subtle" />
         <div className="min-w-0">
           <span className="block text-[14px] font-bold text-txt leading-tight tracking-tight">PigeonHouse</span>
           <span className="block text-[10px] font-lore italic text-txt-muted leading-tight">{ABOUT.tagline}</span>
@@ -277,7 +277,7 @@ export function MobileTopBar() {
     <header className="md:hidden fixed top-0 left-0 right-0 h-12 bg-bg-card/95 backdrop-blur-sm border-b border-[var(--border)] z-50 flex items-center px-4">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <img src="/logo-v1.png" alt="PigeonHouse" className="w-6 h-6 rounded" />
+        <img src="/tokens/pigeon.png" alt="PigeonHouse" className="w-6 h-6 rounded" />
         <span className="text-[13px] font-bold text-txt">PigeonHouse</span>
       </Link>
 
