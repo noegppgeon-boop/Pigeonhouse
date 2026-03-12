@@ -57,19 +57,19 @@ export default function StatusPage() {
          ══════════════════════════════════ */}
       <div className="card-obsidian obsidian-hover p-5 rounded-lg">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>Deployed Seals</h3>
-          <span className="text-[9px] font-mono tracking-widest" style={{ color: "#9C9590" }}>MAINNET</span>
+          <h3 className="text-[13px] font-lore font-semibold text-txt">Deployed Seals</h3>
+          <span className="text-[9px] font-mono tracking-widest text-txt-muted">MAINNET</span>
         </div>
         <div className="space-y-0">
           {programs.map((p) => (
             <a key={p.name} href={`https://solscan.io/account/${p.id}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-between py-3 border-b border-[#3A3632] last:border-0 group">
+              className="flex items-center justify-between py-3 border-b border-[var(--border)] last:border-0 group">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-teal animate-pulse" />
                 <div>
-                  <p className="text-[12px] font-semibold" style={{ color: "#E8E4DC" }}>{p.name}</p>
-                  <p className="text-[10px] font-mono" style={{ color: "#9C9590" }}>{p.short}</p>
+                  <p className="text-[12px] font-semibold text-txt">{p.name}</p>
+                  <p className="text-[10px] font-mono text-txt-muted">{p.short}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -116,18 +116,18 @@ export default function StatusPage() {
          ══════════════════════════════════ */}
       <div className="card-obsidian obsidian-hover p-5 rounded-lg">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>Event Schema</h3>
-          <span className="text-[9px] font-mono tracking-widest" style={{ color: "#9C9590" }}>LOCKED</span>
+          <h3 className="text-[13px] font-lore font-semibold text-txt">Event Schema</h3>
+          <span className="text-[9px] font-mono tracking-widest text-txt-muted">LOCKED</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {events.map((e) => (
-            <div key={e.name} className="p-3.5 rounded-lg border border-[#3A3632]">
+            <div key={e.name} className="p-3.5 rounded-lg border border-[var(--border)]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-mono font-semibold" style={{ color: "#E8E4DC" }}>{e.name}</span>
+                <span className="text-[12px] font-mono font-semibold text-txt">{e.name}</span>
                 <span className="text-[8px] font-mono tracking-widest text-teal">SEALED</span>
               </div>
-              <p className="text-[10px]" style={{ color: "#9C9590" }}>{e.trigger}</p>
-              <p className="text-[10px] mt-0.5" style={{ color: "#9C9590" }}>{e.desc}</p>
+              <p className="text-[10px] text-txt-muted">{e.trigger}</p>
+              <p className="text-[10px] mt-0.5 text-txt-muted">{e.desc}</p>
             </div>
           ))}
         </div>
@@ -137,10 +137,10 @@ export default function StatusPage() {
       <div className="card-obsidian p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <Lock className="h-3.5 w-3.5 text-teal" />
-          <span className="text-[11px] font-semibold" style={{ color: "#E8E4DC" }}>The Seal</span>
-          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker" style={{ color: "#9C9590" }}>DECRYPTED</span>
+          <span className="text-[11px] font-semibold text-txt">The Seal</span>
+          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker text-txt-muted">DECRYPTED</span>
         </div>
-        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: "#9C9590" }}>
+        <p className="text-[10px] mt-2 leading-relaxed text-txt-muted">
           All parameters are hardcoded on-chain. No admin keys can alter fee rates, burn paths, or sweep logic post-deployment. The protocol is its own authority.
         </p>
       </div>

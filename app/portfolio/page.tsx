@@ -112,10 +112,10 @@ export default function PortfolioPage() {
       <div className="card-obsidian p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <Shield className="h-3.5 w-3.5 text-bronze" />
-          <span className="text-[11px] font-semibold" style={{ color: "#E8E4DC" }}>The Trial</span>
-          <span className="text-[9px] font-mono tracking-widest ml-auto" style={{ color: "#9C9590" }}>PARTIAL</span>
+          <span className="text-[11px] font-semibold text-txt">The Trial</span>
+          <span className="text-[9px] font-mono tracking-widest ml-auto text-txt-muted">PARTIAL</span>
         </div>
-        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: "#9C9590" }}>
+        <p className="text-[10px] mt-2 leading-relaxed text-txt-muted">
           Portfolio data is derived from on-chain transaction history. Positions and PnL tracking will be fully decrypted in a future update.
         </p>
       </div>

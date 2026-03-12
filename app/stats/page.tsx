@@ -76,7 +76,7 @@ export default function StatsPage() {
         <div className="card-obsidian obsidian-hover p-5 rounded-lg">
           <div className="flex items-center gap-2 mb-4">
             <Flame className="h-4 w-4 text-crimson" />
-            <h3 className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>The Economics of Fire</h3>
+            <h3 className="text-[13px] font-lore font-semibold text-txt">The Economics of Fire</h3>
           </div>
 
           <div className="space-y-2.5">
@@ -84,7 +84,7 @@ export default function StatsPage() {
             <EconRow label="Burn Allocation" value="1% → permanent burn" tag="SEALED" tagColor="text-crimson" />
             <EconRow label="Treasury" value="0.5% → protocol treasury" />
             <EconRow label="Referral" value="0.5% → referrer (or extra burn)" />
-            <div className="h-px my-1" style={{ background: "#3A3632" }} />
+            <div className="h-px my-1" style={{ background: "var(--border)" }} />
             <EconRow label="Hook Fee (Post-Grad)" value="0.25% TransferFee" tag="HOOK" tagColor="text-bronze" />
             <EconRow label="SOL/SKR Fees" value="1.5% strategic reserve + 0.5% treasury" tag="RESERVE" tagColor="text-teal" />
             <EconRow label="LP Lock" value="Dead wallet — forever" tag="PERMANENT" tagColor="text-teal" />
@@ -178,10 +178,10 @@ export default function StatsPage() {
       <div className="card-obsidian p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <Eye className="h-3.5 w-3.5 text-bronze" />
-          <span className="text-[11px] font-semibold" style={{ color: "#E8E4DC" }}>The Vow</span>
-          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker" style={{ color: "#9C9590" }}>DECRYPTED</span>
+          <span className="text-[11px] font-semibold text-txt">The Vow</span>
+          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker text-txt-muted">DECRYPTED</span>
         </div>
-        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: "#9C9590" }}>
+        <p className="text-[10px] mt-2 leading-relaxed text-txt-muted">
           All metrics on this page are derived from on-chain state. No off-chain databases, no cached estimates. What you see is what the chain holds.
         </p>
       </div>
@@ -238,9 +238,9 @@ function EconRow({ label, value, tag, tagColor }: {
 }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-[11px]" style={{ color: "#9C9590" }}>{label}</span>
+      <span className="text-[11px] text-txt-muted">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-[11px] font-mono" style={{ color: "#E8E4DC" }}>{value}</span>
+        <span className="text-[11px] font-mono text-txt">{value}</span>
         {tag && <span className={`text-[8px] font-mono font-bold tracking-widest ${tagColor}`}>{tag}</span>}
       </div>
     </div>

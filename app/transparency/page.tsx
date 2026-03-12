@@ -59,10 +59,10 @@ export default function TransparencyPage() {
         {LORE_CARDS.map((card) => (
           <div key={card.title} className={`card-obsidian obsidian-hover decrypt-parent p-4 rounded-lg border ${card.border} cursor-default`}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[14px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>{card.title}</span>
+              <span className="text-[14px] font-lore font-semibold text-txt">{card.title}</span>
               <span className={`text-[9px] font-mono font-bold tracking-widest badge-sealed ${card.color}`}>{card.tag}</span>
             </div>
-            <p className="text-[11px] leading-relaxed reveal-line" style={{ color: "#9C9590" }}>{card.desc}</p>
+            <p className="text-[11px] leading-relaxed reveal-line text-txt-muted">{card.desc}</p>
           </div>
         ))}
       </div>
@@ -73,8 +73,8 @@ export default function TransparencyPage() {
       <div className="card-obsidian obsidian-hover p-5 rounded-lg">
         <div className="flex items-center gap-2 mb-4">
           <Flame className="h-4 w-4 text-crimson" />
-          <h3 className="text-[14px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>The Burn Ritual</h3>
-          <span className="text-[9px] font-mono tracking-widest ml-auto" style={{ color: "#9C9590" }}>4 STEPS · ON-CHAIN</span>
+          <h3 className="text-[14px] font-lore font-semibold text-txt">The Burn Ritual</h3>
+          <span className="text-[9px] font-mono tracking-widest ml-auto text-txt-muted">4 STEPS · ON-CHAIN</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           {BURN_RITUAL.map((s, i) => {
@@ -83,15 +83,15 @@ export default function TransparencyPage() {
           }).map((s, i) => (
             <div key={s.step} className="relative">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-lore font-bold" style={{ background: "#3A3632", color: "#E8E4DC" }}>
+                <div className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-lore font-bold text-txt bg-bg-elevated">
                   {s.step}
                 </div>
                 <span className="text-[9px] font-mono tracking-widest text-crimson uppercase">{s.tag}</span>
               </div>
-              <p className="text-[12px] font-semibold leading-tight mb-1" style={{ color: "#E8E4DC" }}>{s.title}</p>
-              <p className="text-[10px] leading-relaxed" style={{ color: "#9C9590" }}>{s.desc}</p>
+              <p className="text-[12px] font-semibold leading-tight mb-1 text-txt">{s.title}</p>
+              <p className="text-[10px] leading-relaxed text-txt-muted">{s.desc}</p>
               {i < 3 && (
-                <div className="hidden sm:block absolute top-3.5 -right-2 text-[#3A3632]">→</div>
+                <div className="hidden sm:block absolute top-3.5 -right-2 text-txt-disabled">→</div>
               )}
             </div>
           ))}
@@ -129,14 +129,14 @@ export default function TransparencyPage() {
           {/* Protocol Invariants */}
           <div className="card-obsidian obsidian-hover p-5 rounded-lg">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>Protocol Invariants</h3>
-              <span className="text-[9px] font-mono tracking-widest" style={{ color: "#9C9590" }}>6 / 6 VERIFIED</span>
+              <h3 className="text-[13px] font-lore font-semibold text-txt">Protocol Invariants</h3>
+              <span className="text-[9px] font-mono tracking-widest text-txt-muted">6 / 6 VERIFIED</span>
             </div>
             <div className="space-y-2.5">
               {INVARIANTS.map((text, i) => ({ text, status: "sealed" })).map((item, i) => (
                 <div key={i} className="flex items-start gap-3 py-1.5">
                   <CheckCircle className="h-4 w-4 text-teal shrink-0 mt-0.5" />
-                  <span className="text-[12px] leading-relaxed" style={{ color: "#E8E4DC" }}>{item.text}</span>
+                  <span className="text-[12px] leading-relaxed text-txt">{item.text}</span>
                   <span className="text-[8px] font-mono tracking-widest text-teal ml-auto shrink-0 mt-0.5">SEALED</span>
                 </div>
               ))}
@@ -146,8 +146,8 @@ export default function TransparencyPage() {
           {/* On-Chain Seals */}
           <div className="card-obsidian obsidian-hover p-5 rounded-lg">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>On-Chain Seals</h3>
-              <span className="text-[9px] font-mono tracking-widest" style={{ color: "#9C9590" }}>PROGRAMS</span>
+              <h3 className="text-[13px] font-lore font-semibold text-txt">On-Chain Seals</h3>
+              <span className="text-[9px] font-mono tracking-widest text-txt-muted">PROGRAMS</span>
             </div>
             <div className="space-y-0">
               {[
@@ -159,13 +159,13 @@ export default function TransparencyPage() {
               ].map((item, i) => (
                 <a key={i} href={`https://solscan.io/${item.type === "token" ? "token" : "account"}/${item.full}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between py-2.5 border-b border-[#3A3632] last:border-0 group">
+                  className="flex items-center justify-between py-2.5 border-b border-[var(--border)] last:border-0 group">
                   <div className="flex items-center gap-2">
-                    <Hash className="h-3 w-3" style={{ color: "#9C9590" }} />
-                    <span className="text-[12px]" style={{ color: "#9C9590" }}>{item.label}</span>
+                    <Hash className="h-3 w-3 text-txt-muted" />
+                    <span className="text-[12px] text-txt-muted">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono group-hover:text-teal transition-colors" style={{ color: "#E8E4DC" }}>{item.value}</span>
+                    <span className="text-[11px] font-mono group-hover:text-teal transition-colors text-txt">{item.value}</span>
                     <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-teal" />
                   </div>
                 </a>

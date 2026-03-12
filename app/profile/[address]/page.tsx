@@ -208,10 +208,10 @@ export default function ProfilePage() {
       <div className="card-obsidian p-4 rounded-lg">
         <div className="flex items-center gap-2">
           <Eye className="h-3.5 w-3.5 text-bronze" />
-          <span className="text-[11px] font-semibold" style={{ color: "#E8E4DC" }}>The Counterfeit</span>
-          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker" style={{ color: "#9C9590" }}>DECRYPTED</span>
+          <span className="text-[11px] font-semibold text-txt">The Counterfeit</span>
+          <span className="text-[9px] font-mono tracking-widest ml-auto animate-tag-flicker text-txt-muted">DECRYPTED</span>
         </div>
-        <p className="text-[10px] mt-2 leading-relaxed" style={{ color: "#9C9590" }}>
+        <p className="text-[10px] mt-2 leading-relaxed text-txt-muted">
           {SCORING.formula}. {SCORING.disclaimer}
         </p>
       </div>

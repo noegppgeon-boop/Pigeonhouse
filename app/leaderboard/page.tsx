@@ -86,20 +86,20 @@ export default function LeaderboardPage() {
                         {badge && <badge.icon className={`h-4 w-4 ${badge.color}`} />}
                       </div>
                       <div>
-                        <span className="text-[13px] font-lore font-semibold" style={{ color: "#E8E4DC" }}>{archetype.title}</span>
+                        <span className="text-[13px] font-lore font-semibold text-txt">{archetype.title}</span>
                         <span className={`block text-[9px] font-mono tracking-widest ${archetype.color}`}>{badge?.label?.toUpperCase()}</span>
                       </div>
                     </div>
-                    <span className="text-[20px] font-mono font-bold" style={{ color: "#3A3632" }}>#{i + 1}</span>
+                    <span className="text-[20px] font-mono font-bold text-txt-disabled">#{i + 1}</span>
                   </div>
 
                   {/* Creator */}
                   <Link href={`/profile/${entry.address}`}
                     className="flex items-center gap-2 mb-3 group">
-                    <div className="w-6 h-6 rounded bg-[#3A3632] flex items-center justify-center text-[10px] font-bold" style={{ color: "#E8E4DC" }}>
+                    <div className="w-6 h-6 rounded bg-bg-elevated flex items-center justify-center text-[10px] font-bold text-txt">
                       {entry.address.charAt(0)}
                     </div>
-                    <span className="text-[12px] font-mono group-hover:text-teal transition-colors" style={{ color: "#E8E4DC" }}>
+                    <span className="text-[12px] font-mono group-hover:text-teal transition-colors text-txt">
                       {shortenAddress(entry.address, 4)}
                     </span>
                   </Link>
@@ -107,21 +107,21 @@ export default function LeaderboardPage() {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-[14px] font-mono font-bold" style={{ color: "#E8E4DC" }}>{entry.tokens}</p>
-                      <p className="text-[9px]" style={{ color: "#9C9590" }}>launches</p>
+                      <p className="text-[14px] font-mono font-bold text-txt">{entry.tokens}</p>
+                      <p className="text-[9px] text-txt-muted">launches</p>
                     </div>
                     <div>
                       <p className="text-[14px] font-mono font-bold text-crimson">{formatNumber(entry.totalPigeon / 1e6)}</p>
-                      <p className="text-[9px]" style={{ color: "#9C9590" }}>volume</p>
+                      <p className="text-[9px] text-txt-muted">volume</p>
                     </div>
                     <div>
                       <p className="text-[14px] font-mono font-bold text-teal">{score}</p>
-                      <p className="text-[9px]" style={{ color: "#9C9590" }}>score</p>
+                      <p className="text-[9px] text-txt-muted">score</p>
                     </div>
                   </div>
 
                   {/* Score bar */}
-                  <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: "#3A3632" }}>
+                  <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                     <motion.div
                       className={`h-full rounded-full`}
                       style={{ background: i === 0 ? "#8B2500" : i === 1 ? "#A67C52" : "#1A7A6D" }}
@@ -256,10 +256,10 @@ export default function LeaderboardPage() {
         <div className="card-obsidian p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <Target className="h-3.5 w-3.5 text-bronze" />
-            <span className="text-[11px] font-semibold tracking-wide" style={{ color: "#E8E4DC" }}>Scoring Methodology</span>
-            <span className="text-[9px] font-mono tracking-widest ml-auto" style={{ color: "#9C9590" }}>{SCORING.tag}</span>
+            <span className="text-[11px] font-semibold tracking-wide text-txt">Scoring Methodology</span>
+            <span className="text-[9px] font-mono tracking-widest ml-auto text-txt-muted">{SCORING.tag}</span>
           </div>
-          <p className="text-[10px] leading-relaxed" style={{ color: "#9C9590" }}>
+          <p className="text-[10px] leading-relaxed text-txt-muted">
             {SCORING.formula}. {SCORING.disclaimer}
           </p>
         </div>

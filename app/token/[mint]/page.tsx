@@ -332,9 +332,9 @@ export default function TokenPage() {
               onSuccess={refetch}
             />
 
-            {/* ── Proof Module (obsidian) ── */}
-            <div className="card-obsidian obsidian-hover p-4 space-y-3">
-              <h3 className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: "#9C9590" }}>
+            {/* ── Proof Module ── */}
+            <div className="card p-4 space-y-3">
+              <h3 className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5 text-txt-muted">
                 <Eye className="h-3 w-3" />
                 On-Chain Proof
               </h3>
@@ -342,9 +342,9 @@ export default function TokenPage() {
               <ProofRow icon={Shield} label="Fee" value="2% per trade" status="active" />
               <ProofRow icon={Zap} label="Sweep lane" value="Permissionless" status="active" />
               <ProofRow icon={Target} label="LP lock" value="Permanent (dead wallet)" status="active" />
-              <div className="pt-2 border-t border-[#3A3632]">
+              <div className="pt-2 border-t border-[var(--border)]">
                 <a href={`https://solscan.io/token/${mintAddress}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[10px] hover:underline transition-colors" style={{ color: "#9C9590" }}>
+                  className="flex items-center gap-1.5 text-[10px] text-txt-muted hover:text-txt-secondary hover:underline transition-colors">
                   Verify on-chain
                   <ExternalLink className="h-2.5 w-2.5" />
                 </a>
@@ -403,12 +403,12 @@ function ProofRow({ icon: Icon, label, value, status }: {
 }) {
   return (
     <div className="flex items-center justify-between text-[11px]">
-      <div className="flex items-center gap-2" style={{ color: "#E8E4DC" }}>
+      <div className="flex items-center gap-2 text-txt">
         <Icon className="h-3 w-3 text-crimson" />
         <span>{label}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="font-mono" style={{ color: "#9C9590" }}>{value}</span>
+        <span className="font-mono text-txt-muted">{value}</span>
         <span className={`w-1.5 h-1.5 rounded-full ${status === "active" ? "bg-green" : "bg-amber"}`} />
       </div>
     </div>

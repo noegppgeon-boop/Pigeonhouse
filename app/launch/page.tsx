@@ -321,7 +321,7 @@ export default function LaunchPage() {
 
                     {/* Simulated Card Preview */}
                     <div className="card-obsidian p-4 rounded-lg">
-                      <p className="text-[9px] uppercase tracking-widest font-semibold mb-3" style={{ color: "#9C9590" }}>How it will appear</p>
+                      <p className="text-[9px] uppercase tracking-widest font-semibold mb-3 text-txt-muted">How it will appear</p>
                       <div className="flex items-center gap-3 mb-3">
                         {resolvedImage ? (
                           <img src={resolvedImage} alt={symbol} className="w-10 h-10 rounded-md object-cover" />
@@ -331,8 +331,8 @@ export default function LaunchPage() {
                           </div>
                         )}
                         <div>
-                          <p className="text-[14px] font-semibold leading-tight" style={{ color: "#E8E4DC" }}>{name || "Token Name"}</p>
-                          <p className="text-[11px] font-mono" style={{ color: "#9C9590" }}>${symbol || "TKN"}</p>
+                          <p className="text-[14px] font-semibold leading-tight text-txt">{name || "Token Name"}</p>
+                          <p className="text-[11px] font-mono text-txt-muted">${symbol || "TKN"}</p>
                         </div>
                         <div className="ml-auto">
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-crimson/15 text-crimson border border-crimson/20">
@@ -340,10 +340,10 @@ export default function LaunchPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="h-1 rounded-full overflow-hidden" style={{ background: "#3A3632" }}>
+                      <div className="h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                         <div className="h-full w-0 rounded-full bg-gradient-to-r from-[#A67C52] to-[#8B2500]" />
                       </div>
-                      <p className="text-[10px] mt-1.5" style={{ color: "#9C9590" }}>0% to ascension</p>
+                      <p className="text-[10px] mt-1.5 text-txt-muted">0% to ascension</p>
                     </div>
 
                     {/* Summary rows */}
@@ -455,8 +455,8 @@ export default function LaunchPage() {
                         </div>
                       )}
                       <div>
-                        <p className="text-[16px] font-bold leading-tight" style={{ color: "#E8E4DC" }}>{name}</p>
-                        <p className="text-[12px] font-mono" style={{ color: "#9C9590" }}>${symbol}</p>
+                        <p className="text-[16px] font-bold leading-tight text-txt">{name}</p>
+                        <p className="text-[12px] font-mono text-txt-muted">${symbol}</p>
                       </div>
                       <div className="ml-auto">
                         <span className="badge badge-obsidian">
@@ -467,20 +467,20 @@ export default function LaunchPage() {
 
                     <div className="space-y-2 text-[12px]">
                       <div className="flex justify-between">
-                        <span style={{ color: "#9C9590" }}>Mint</span>
+                        <span className="text-txt-muted">Mint</span>
                         <button onClick={() => { navigator.clipboard.writeText(successData.mint); setMintCopied(true); setTimeout(() => setMintCopied(false), 1500); }}
-                          className="flex items-center gap-1.5 font-mono hover:text-teal transition-colors" style={{ color: "#E8E4DC" }}>
+                          className="flex items-center gap-1.5 font-mono hover:text-teal transition-colors text-txt">
                           {shortenAddress(successData.mint, 6)}
                           {mintCopied ? <Check className="h-3 w-3 text-teal" /> : <Copy className="h-3 w-3" />}
                         </button>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "#9C9590" }}>Status</span>
+                        <span className="text-txt-muted">Status</span>
                         <span className="text-crimson font-medium">Live on bonding curve</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={{ color: "#9C9590" }}>Creator</span>
-                        <span className="font-mono" style={{ color: "#E8E4DC" }}>{publicKey ? shortenAddress(publicKey.toBase58(), 4) : "—"}</span>
+                        <span className="text-txt-muted">Creator</span>
+                        <span className="font-mono text-txt">{publicKey ? shortenAddress(publicKey.toBase58(), 4) : "—"}</span>
                       </div>
                     </div>
                   </div>
@@ -586,7 +586,7 @@ export default function LaunchPage() {
               <div className="card-obsidian p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Info className="h-3.5 w-3.5 text-bronze" />
-                  <span className="text-[11px] font-semibold tracking-wide" style={{ color: "#E8E4DC" }}>How It Works</span>
+                  <span className="text-[11px] font-semibold tracking-wide text-txt">How It Works</span>
                 </div>
                 <div className="space-y-3">
                   {HOW_IT_WORKS.map((item, i) => {
@@ -595,12 +595,12 @@ export default function LaunchPage() {
                     return { icon: IconComp, ...item };
                   }).map((item, i) => (
                     <div key={i} className="flex items-start gap-2.5">
-                      <div className="w-6 h-6 rounded flex items-center justify-center shrink-0" style={{ background: "#3A3632" }}>
+                      <div className="w-6 h-6 rounded flex items-center justify-center shrink-0" style={{ background: "var(--border)" }}>
                         <item.icon className="h-3 w-3 text-crimson" />
                       </div>
                       <div>
-                        <p className="text-[11px] font-semibold leading-tight" style={{ color: "#E8E4DC" }}>{item.label}</p>
-                        <p className="text-[10px] leading-tight mt-0.5" style={{ color: "#9C9590" }}>{item.desc}</p>
+                        <p className="text-[11px] font-semibold leading-tight text-txt">{item.label}</p>
+                        <p className="text-[10px] leading-tight mt-0.5 text-txt-muted">{item.desc}</p>
                       </div>
                     </div>
                   ))}

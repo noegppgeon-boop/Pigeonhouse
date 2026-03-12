@@ -184,33 +184,27 @@ export function Sidebar() {
       {/* ── Spacer ── */}
       <div className="flex-1" />
 
-      {/* ── 6. Burn Archive Card (obsidian) ── */}
-      <div className="px-3 pb-2">
-        <div className="card-obsidian obsidian-hover rounded-lg p-3.5">
+      {/* ── 6. Burn Archive Card ── */}
+      <div className="px-3 pb-4">
+        <div className="card rounded-lg p-3.5">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Flame className="h-3.5 w-3.5 text-crimson" />
-              <span className="text-[11px] font-semibold tracking-wide" style={{ color: "#E8E4DC" }}>Offerings Burned</span>
+              <span className="text-[11px] font-semibold tracking-wide text-txt-secondary">Offerings Burned</span>
             </div>
           </div>
           <p className="text-[22px] font-mono font-bold text-crimson leading-none">{burnedDisplay}</p>
-          <p className="text-[10px] font-lore italic mt-1.5" style={{ color: "#9C9590" }}>PIGEON returned to ashes</p>
-          <div className="mt-2.5 pt-2 border-t border-[#3A3632]">
+          <p className="text-[10px] font-lore italic mt-1.5 text-txt-muted">PIGEON returned to ashes</p>
+          <div className="mt-2.5 pt-2 border-t border-[var(--border)]">
             <Link
               href="/transparency"
-              className="flex items-center gap-1.5 text-[10px] font-medium hover:underline transition-colors"
-              style={{ color: "#9C9590" }}
+              className="flex items-center gap-1.5 text-[10px] font-medium text-txt-muted hover:text-txt-secondary hover:underline transition-colors"
             >
               View Proof Ledger
               <ExternalLink className="h-2.5 w-2.5" />
             </Link>
           </div>
         </div>
-      </div>
-
-      {/* ── 7. Wallet Area ── */}
-      <div className="px-3 pb-4 pt-2 border-t border-[var(--border)]">
-        <WalletMultiButton />
       </div>
     </aside>
   );

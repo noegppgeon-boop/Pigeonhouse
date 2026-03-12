@@ -147,12 +147,12 @@ body {
   transform: translateY(0);
 }
 
-/* Obsidian cards — dark archive surfaces */
+/* Obsidian cards — now themed with parchment palette */
 .card-obsidian {
-  background: var(--obsidian);
-  border: 1px solid var(--obsidian-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: var(--obsidian-text);
+  color: var(--text-primary);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -161,7 +161,7 @@ body {
   cursor: pointer;
 }
 .card-obsidian-interactive:hover {
-  border-color: #4A4642;
+  border-color: var(--border-3);
   box-shadow: 0 0 16px rgba(139,37,0,0.06);
 }
 .card-obsidian-interactive:hover .decrypt-line {
@@ -170,7 +170,7 @@ body {
 
 .card-obsidian .text-txt-secondary,
 .card-obsidian .text-txt-muted {
-  color: #9C9590;
+  color: var(--text-tertiary);
 }
 
 /* ═══════════════════════════════════════
@@ -276,7 +276,7 @@ body {
 .badge-bronze  { background: var(--bronze-dim);  color: var(--bronze);  border: 1px solid rgba(166,124,82,0.15); }
 .badge-gold    { background: var(--gold-dim);    color: var(--gold);    border: 1px solid rgba(166,124,82,0.15); }
 .badge-muted   { background: rgba(0,0,0,0.03);  color: var(--text-tertiary); border: 1px solid var(--border); }
-.badge-obsidian { background: var(--obsidian); color: var(--obsidian-text); border: 1px solid var(--obsidian-border); font-family: 'Crimson Text', serif; }
+.badge-obsidian { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); font-family: 'Crimson Text', serif; }
 
 /* Status tag micro-motion */
 .badge-sealed { animation: tag-flicker 4s ease-in-out infinite; }
@@ -555,11 +555,11 @@ body {
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 10px;
-  background: var(--obsidian);
-  border: 1px solid var(--obsidian-border);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 11px;
-  color: var(--obsidian-text);
+  color: var(--text-primary);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -715,8 +715,8 @@ body {
 
 /* Modal wrapper */
 .wallet-adapter-modal-wrapper {
-  background: var(--obsidian) !important;
-  border: 1px solid var(--obsidian-border) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px !important;
   box-shadow: 0 8px 40px rgba(0,0,0,0.4) !important;
   font-family: 'Inter', system-ui, sans-serif !important;
@@ -726,7 +726,7 @@ body {
 /* Modal title */
 .wallet-adapter-modal-title {
   font-family: 'Crimson Text', 'Georgia', serif !important;
-  color: var(--obsidian-text) !important;
+  color: var(--text-primary) !important;
   font-size: 20px !important;
   font-weight: 700 !important;
 }
@@ -743,7 +743,7 @@ body {
 
 .wallet-adapter-modal-list .wallet-adapter-button {
   background: transparent !important;
-  color: var(--obsidian-text) !important;
+  color: var(--text-primary) !important;
   border-radius: 8px !important;
   font-weight: 500 !important;
   font-size: 14px !important;
@@ -768,7 +768,7 @@ body {
   transition: color 0.12s ease !important;
 }
 .wallet-adapter-modal-list-more:hover {
-  color: var(--obsidian-text) !important;
+  color: var(--text-primary) !important;
 }
 .wallet-adapter-modal-list-more svg {
   fill: currentColor !important;
@@ -781,7 +781,7 @@ body {
   transition: color 0.12s ease !important;
 }
 .wallet-adapter-modal-button-close:hover {
-  color: var(--obsidian-text) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Middle section / "new to solana" */

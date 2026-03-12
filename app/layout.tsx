@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import WalletProvider from "@/components/WalletProvider";
 import { Sidebar, BottomNav, MobileTopBar } from "@/components/layout/Sidebar";
+import TopBar from "@/components/layout/TopBar";
 import { ToastProvider } from "@/components/shared/Toast";
 import CommandModal from "@/components/shared/CommandModal";
 import WalletGate from "@/components/shared/WalletGate";
@@ -26,6 +27,9 @@ export default function RootLayout({
 
             {/* Desktop sidebar */}
             <Sidebar />
+
+            {/* Desktop top-right wallet/profile */}
+            <TopBar />
 
             {/* Mobile top bar */}
             <MobileTopBar />
