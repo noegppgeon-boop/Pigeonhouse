@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const HELIUS_KEY = process.env.HELIUS_API_KEY
   || process.env.NEXT_PUBLIC_RPC_URL?.match(/api-key=([^&]+)/)?.[1]
-  || "eb49a51b-3242-4758-8de7-db8d9f629e57";
+  || "";
 
 const cache = new Map<string, { data: any; ts: number }>();
 const CACHE_TTL = 15_000;

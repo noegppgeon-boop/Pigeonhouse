@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, getClientIP } from "@/lib/rateLimit";
 
 const JUP_KEY = process.env.JUPITER_API_KEY || "";
 const JUP_HOST = JUP_KEY ? "https://api.jup.ag" : "https://lite-api.jup.ag";
 const JUP_API = `${JUP_HOST}/swap/v1`;
 
 export async function GET(req: NextRequest) {
+  const ip = getClientIP(req);
+  const rl = rateLimit(`jup-quote:${ip}`, 60_000, 30);
+  if (!rl.ok) return NextResponse.json({ error: "rate limited" }, { status: 429 });
   const { searchParams } = new URL(req.url);
   const inputMint = searchParams.get("inputMint");
   const outputMint = searchParams.get("outputMint");

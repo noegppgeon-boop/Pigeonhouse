@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit, getClientIP } from "@/lib/rateLimit";
 import fs from "fs";
 import path from "path";
 
@@ -12,7 +13,11 @@ const POOL_DIR = "/tmp/vanity-pool";
  * The keypair is used as mint signer for token creation.
  * After serving, the keypair file is deleted from the pool.
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIP(req);
+  const rl = rateLimit(`vanity:${ip}`, 60_000, 5);
+  if (!rl.ok) return NextResponse.json({ error: "rate limited" }, { status: 429 });
+
   try {
     if (!fs.existsSync(POOL_DIR)) {
       return NextResponse.json({ error: "no_pool", message: "Vanity pool not initialized" }, { status: 503 });

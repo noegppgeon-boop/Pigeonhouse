@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit, getClientIP } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,11 @@ const PIGEON_MINT = "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump";
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 const SKR_MINT = "SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIP(req);
+  const rl = rateLimit(`prices:${ip}`, 60_000, 60);
+  if (!rl.ok) return NextResponse.json({ error: "rate limited" }, { status: 429 });
+
   const now = Date.now();
   if (cache && now - cache.ts < CACHE_TTL) {
     return NextResponse.json(cache.data);

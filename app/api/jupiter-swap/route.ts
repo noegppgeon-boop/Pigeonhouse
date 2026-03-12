@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, getClientIP } from "@/lib/rateLimit";
 
 const JUP_KEY = process.env.JUPITER_API_KEY || "";
 const JUP_HOST = JUP_KEY ? "https://api.jup.ag" : "https://lite-api.jup.ag";
 const JUP_API = `${JUP_HOST}/swap/v1`;
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIP(req);
+  const rl = rateLimit(`jup-swap:${ip}`, 60_000, 15);
+  if (!rl.ok) return NextResponse.json({ error: "rate limited" }, { status: 429 });
   const body = await req.json();
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };

@@ -34,7 +34,8 @@ export const METAPLEX_METADATA_PROGRAM = new PublicKey(
 
 export const RPC_URL =
   process.env.NEXT_PUBLIC_RPC_URL ||
-  "https://api.devnet.solana.com";
+  process.env.RPC_URL ||
+  "https://api.mainnet-beta.solana.com";
 
 export const DEFAULT_SLIPPAGE_BPS = 500; // 5%
 
