@@ -8,6 +8,10 @@ import path from "path";
 
 export const dynamic = "force-dynamic";
 
+// Tokens created before graduation threshold fix (2026-03-12)
+// Hidden from board but stats still count
+const HIDDEN_BEFORE_EPOCH = 1741784400; // 2026-03-12T12:00:00Z — all old tokens before this
+
 // Old BondingCurve layout (pre-multi-quote): no quote_mint field
 // New BondingCurve layout: has quote_mint (Pubkey, 32 bytes) after creator
 // Discriminator: 8 bytes
@@ -204,6 +208,13 @@ export async function GET(req: Request) {
       } catch { /* skip */ }
     }
 
+    // Filter out old test tokens (created before graduation threshold fix)
+    const visibleCurves = curves.filter((c: any) => {
+      if (!c?.account) return false;
+      const ts = parseInt(c.account.createdAt || "0", 10);
+      return ts >= HIDDEN_BEFORE_EPOCH;
+    });
+
     return NextResponse.json({
       config: {
         authority: config.authority.toBase58(),
@@ -215,7 +226,7 @@ export async function GET(req: Request) {
         totalPigeonBurned: config.totalPigeonBurned.toString(),
       },
       quoteGradMap,
-      curves,
+      curves: visibleCurves,
     });
   } catch (err: any) {
     console.error("[API /platform] Error:", err.message);
