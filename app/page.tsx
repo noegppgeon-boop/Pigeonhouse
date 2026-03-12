@@ -206,8 +206,8 @@ export default function Board() {
         ) : filtered.length === 0 ? (
           <motion.div key="empty" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="card p-16 text-center">
-            <div className="w-14 h-14 rounded-lg bg-crimson/8 flex items-center justify-center mx-auto mb-4">
-              <Rocket className="h-6 w-6 text-crimson" />
+            <div className="mx-auto mb-4">
+              <img src="/logo-v1.png" alt="PigeonHouse" className="w-14 h-14 rounded-lg mx-auto animate-float" />
             </div>
             <p className="text-body font-semibold text-txt mb-1">{EMPTY_STATES.noTokens.text}</p>
             <p className="text-body-sm text-txt-muted font-lore italic mb-6">{EMPTY_STATES.noTokens.lore}</p>
@@ -236,7 +236,7 @@ export default function Board() {
           </motion.div>
         ) : (
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 stagger-grid">
             {filtered.map((item, i) => (
               <BoardCard
                 key={item.account.tokenMint.toBase58()}
@@ -305,7 +305,7 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
       transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}
     >
       <Link href={`/token/${mint}`} className="block group">
-        <div className="card card-interactive card-lift p-0 h-full overflow-hidden">
+        <div className="card card-interactive hover-lift p-0 h-full overflow-hidden">
 
           {/* ── Card Header ── */}
           <div className="p-3.5 pb-0">
@@ -326,7 +326,7 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-[14px] font-semibold text-txt truncate leading-tight">{name}</p>
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${status.bg} ${status.color}`}>
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${status.bg} ${status.color} ${status.label === "New" ? "badge-new-pulse" : ""}`}>
                     {status.label}
                   </span>
                 </div>
@@ -377,7 +377,7 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
             </div>
             <div className="h-[4px] rounded-full bg-border overflow-hidden">
               <motion.div
-                className={`h-full rounded-full ${complete ? "bg-teal" : "bg-gradient-to-r from-bronze to-crimson"}`}
+                className={`h-full rounded-full progress-glow ${complete ? "bg-teal" : "bg-gradient-to-r from-bronze to-crimson"}`}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.02 }}

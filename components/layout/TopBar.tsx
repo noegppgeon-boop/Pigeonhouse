@@ -37,9 +37,9 @@ export default function TopBar() {
       <div className="hidden md:flex fixed top-0 right-0 z-40 p-4">
         <button
           onClick={() => setVisible(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-crimson text-[#F5F0E8] text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-crimson text-[#F5F0E8] text-[13px] font-semibold hover:opacity-90 transition-opacity shadow-sm animate-pulse-glow"
         >
-          <Wallet className="h-3.5 w-3.5" />
+          <img src="/logo-v1.png" alt="" className="w-4 h-4 rounded-sm" />
           Connect Wallet
         </button>
       </div>

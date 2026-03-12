@@ -111,7 +111,9 @@ export default function RecentTrades({ mint, quoteSymbol: defaultQuoteSymbol = "
             return (
               <div
                 key={t.signature}
-                className={`flex items-center justify-between px-2 py-2 text-[11px] border-b border-[var(--border)] last:border-0 hover:bg-bg-elevated/50 transition-colors ${i === 0 ? "animate-event-highlight" : ""}`}
+                className={`flex items-center justify-between px-2 py-2 text-[11px] border-b border-[var(--border)] last:border-0 hover:bg-bg-elevated/50 transition-colors ${
+                  i === 0 ? "animate-trade-slide" : ""
+                } ${i < 3 ? (t.type === "buy" ? "animate-buy-flash" : "animate-sell-flash") : ""}`}
                 style={i < 3 ? { animationDelay: `${i * 100}ms` } : undefined}
               >
                 {/* Type */}

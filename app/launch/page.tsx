@@ -436,9 +436,14 @@ export default function LaunchPage() {
                 <motion.div key="success" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="py-8">
                   {/* Celebration */}
                   <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-teal/10 flex items-center justify-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
+                      className="w-16 h-16 mx-auto mb-4 rounded-full bg-teal/10 flex items-center justify-center animate-bounce-subtle"
+                    >
                       <Check className="h-8 w-8 text-teal" />
-                    </div>
+                    </motion.div>
                     <h2 className="text-[20px] font-bold text-txt mb-1">{LAUNCH_COPY.successTitle}</h2>
                     <p className="text-[13px] text-txt-secondary">{LAUNCH_COPY.successLore}</p>
                     <p className="text-[11px] text-txt-muted font-lore italic mt-1">{LAUNCH_COPY.successArchive}</p>

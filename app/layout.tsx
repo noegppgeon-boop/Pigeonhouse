@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: "PigeonHouse — Ritual Launch Terminal",
   description:
     "The deflationary token launchpad on Solana. Inscribe with trust, burn with proof, build with reputation.",
+  icons: {
+    icon: "/logo-v1.png",
+    apple: "/logo-v1.png",
+  },
 };
 
 export default function RootLayout({

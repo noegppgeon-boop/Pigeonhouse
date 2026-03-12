@@ -528,7 +528,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             isDisabled
               ? "bg-border text-txt-muted cursor-not-allowed"
               : tab === "buy"
-              ? "bg-teal text-[#F5F0E8] shadow-glow hover:opacity-90"
+              ? `bg-teal text-[#F5F0E8] shadow-glow hover:opacity-90 ${amountNum > 0 ? "btn-glow-active" : ""}`
               : "bg-crimson/15 text-crimson hover:bg-burn/30"
           }`}
         >
@@ -552,7 +552,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
       {/* Feedback */}
       {error && <p className="mt-3 text-caption text-crimson text-center">{error}</p>}
       {txSig && (
-        <div className="mt-3 text-center">
+        <div className="mt-3 text-center animate-success-flash rounded-lg p-2">
           <p className="text-caption text-success">
             Mark Sealed —{" "}
             <a

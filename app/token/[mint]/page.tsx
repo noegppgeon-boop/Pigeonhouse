@@ -221,7 +221,7 @@ export default function TokenPage() {
       {/* ══════════════════════════════════
           SUMMARY METRICS
          ══════════════════════════════════ */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 stagger-grid">
         <MetricCard label="Price" value={(() => {
           const usd = toUsd(price, quoteKey, usdPrices);
           if (usd > 0 && usd < 0.000001) return `$${usd.toFixed(9)}`;
@@ -273,7 +273,7 @@ export default function TokenPage() {
         </div>
         <div className="h-2.5 rounded-full bg-border overflow-hidden">
           <motion.div
-            className={`h-full rounded-full ${isComplete ? "bg-teal" : "bg-gradient-to-r from-bronze to-crimson"}`}
+            className={`h-full rounded-full progress-glow ${isComplete ? "bg-teal" : "bg-gradient-to-r from-bronze to-crimson"}`}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(progress, 100)}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -374,12 +374,12 @@ function MetricCard({ label, value, unit, icon: Icon, color }: {
   label: string; value: string; unit: string; icon: typeof TrendingUp; color: string;
 }) {
   return (
-    <div className="card p-3">
+    <div className="card p-3 hover-lift">
       <div className="flex items-center gap-1.5 mb-1">
         <Icon className={`h-3 w-3 ${color}`} />
         <span className="text-[10px] text-txt-muted uppercase tracking-wider">{label}</span>
       </div>
-      <p className="text-[14px] font-mono font-bold text-txt leading-tight">{value}</p>
+      <p className="text-[14px] font-mono font-bold text-txt leading-tight animate-fade-in">{value}</p>
       <p className="text-[10px] text-txt-muted mt-0.5">{unit}</p>
     </div>
   );

@@ -62,9 +62,7 @@ export function Sidebar() {
 
       {/* ── 1. Logotype ── */}
       <Link href="/" className="group flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
-        <div className="w-8 h-8 rounded-md bg-crimson flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-          <span className="text-[#F5F0E8] text-sm font-bold font-lore">P</span>
-        </div>
+        <img src="/logo-v1.png" alt="PigeonHouse" className="w-8 h-8 rounded-md shadow-sm transition-transform group-hover:scale-110 group-hover:animate-bounce-subtle" />
         <div className="min-w-0">
           <span className="block text-[14px] font-bold text-txt leading-tight tracking-tight">PigeonHouse</span>
           <span className="block text-[10px] font-lore italic text-txt-muted leading-tight">{ABOUT.tagline}</span>
@@ -134,7 +132,7 @@ export function Sidebar() {
             <span className="text-[10px] font-semibold text-txt-secondary uppercase tracking-widest">Protocol</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <SignalItem label="Burned" value={burnedDisplay} icon={Flame} color="text-crimson" />
+            <SignalItem label="Burned" value={burnedDisplay} icon={Flame} color="text-crimson" glow />
             <SignalItem label="Tokens" value={String(tokensLaunched)} icon={Users} color="text-teal" />
           </div>
           <div className="flex items-center justify-between text-[10px] text-txt-muted pt-1 border-t border-[var(--border)]">
@@ -210,12 +208,12 @@ export function Sidebar() {
   );
 }
 
-function SignalItem({ label, value, icon: Icon, color }: {
-  label: string; value: string; icon: typeof Flame; color: string;
+function SignalItem({ label, value, icon: Icon, color, glow }: {
+  label: string; value: string; icon: typeof Flame; color: string; glow?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2">
-      <Icon className={`h-3 w-3 ${color} shrink-0`} />
+      <Icon className={`h-3 w-3 ${color} shrink-0 ${glow ? "animate-glow-pulse" : ""}`} />
       <div className="min-w-0">
         <p className="text-[10px] text-txt-muted leading-none">{label}</p>
         <p className={`text-[13px] font-mono font-semibold leading-tight ${color}`}>{value}</p>
@@ -279,9 +277,7 @@ export function MobileTopBar() {
     <header className="md:hidden fixed top-0 left-0 right-0 h-12 bg-bg-card/95 backdrop-blur-sm border-b border-[var(--border)] z-50 flex items-center px-4">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 shrink-0">
-        <div className="w-6 h-6 rounded bg-crimson flex items-center justify-center">
-          <span className="text-[#F5F0E8] text-[10px] font-bold font-lore">P</span>
-        </div>
+        <img src="/logo-v1.png" alt="PigeonHouse" className="w-6 h-6 rounded" />
         <span className="text-[13px] font-bold text-txt">PigeonHouse</span>
       </Link>
 
