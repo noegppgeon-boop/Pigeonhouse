@@ -10,10 +10,18 @@ interface Trade {
   timestamp: number;
   tokenAmount: number;
   pigeonAmount: number;
-  slot: number;
+  quoteAmount?: number;
+  quoteSymbol?: string;
+  price: number;
+  trader?: string;
 }
 
-export default function RecentTrades({ mint }: { mint: string }) {
+interface Props {
+  mint: string;
+  quoteSymbol?: string;
+}
+
+export default function RecentTrades({ mint, quoteSymbol: defaultQuoteSymbol = "PIGEON" }: Props) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +36,7 @@ export default function RecentTrades({ mint }: { mint: string }) {
       finally { setLoading(false); }
     }
     load();
-    const interval = setInterval(load, 30_000);
+    const interval = setInterval(load, 15_000);
     return () => clearInterval(interval);
   }, [mint]);
 
@@ -41,9 +49,24 @@ export default function RecentTrades({ mint }: { mint: string }) {
   }
 
   function fmtAmount(n: number) {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 100_000) return `${(n / 1_000).toFixed(0)}K`;
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-    return n.toFixed(0);
+    if (n >= 1) return n.toFixed(2);
+    return n.toFixed(4);
+  }
+
+  function fmtPrice(p: number) {
+    if (p === 0) return "—";
+    if (p < 0.000001) return p.toExponential(1);
+    if (p < 0.001) return p.toFixed(6);
+    if (p < 1) return p.toFixed(4);
+    return p.toFixed(2);
+  }
+
+  function shortenAddr(addr: string) {
+    if (!addr || addr.length < 8) return addr || "";
+    return addr.slice(0, 4) + "…" + addr.slice(-4);
   }
 
   return (
@@ -75,50 +98,66 @@ export default function RecentTrades({ mint }: { mint: string }) {
           {/* Header */}
           <div className="flex items-center justify-between px-2 py-1.5 text-[10px] text-txt-muted uppercase tracking-wider font-semibold border-b border-[var(--border)]">
             <span className="w-12">Type</span>
-            <span className="flex-1 text-right">Amount</span>
-            <span className="w-16 text-right">PIGEON</span>
+            <span className="w-16 text-right hidden sm:block">Trader</span>
+            <span className="flex-1 text-right">Tokens</span>
+            <span className="w-20 text-right">{defaultQuoteSymbol}</span>
+            <span className="w-16 text-right hidden sm:block">Price</span>
             <span className="w-10 text-right">Age</span>
-            <span className="w-6" />
+            <span className="w-5" />
           </div>
-          {trades.slice(0, 20).map((t, i) => (
-            <div
-              key={t.signature}
-              className={`flex items-center justify-between px-2 py-2 text-[11px] border-b border-[var(--border)] last:border-0 hover:bg-bg-elevated/50 transition-colors ${i === 0 ? "animate-event-highlight" : ""}`}
-              style={i < 3 ? { animationDelay: `${i * 100}ms` } : undefined}
-            >
-              {/* Type */}
-              <div className="w-12 flex items-center gap-1">
-                {t.type === "buy" ? (
-                  <>
-                    <ArrowUpRight className="h-3 w-3 text-green" />
-                    <span className="font-semibold text-green">BUY</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDownRight className="h-3 w-3 text-crimson" />
-                    <span className="font-semibold text-crimson">SELL</span>
-                  </>
-                )}
+          {trades.slice(0, 30).map((t, i) => {
+            const qs = t.quoteSymbol || defaultQuoteSymbol;
+            return (
+              <div
+                key={t.signature}
+                className={`flex items-center justify-between px-2 py-2 text-[11px] border-b border-[var(--border)] last:border-0 hover:bg-bg-elevated/50 transition-colors ${i === 0 ? "animate-event-highlight" : ""}`}
+                style={i < 3 ? { animationDelay: `${i * 100}ms` } : undefined}
+              >
+                {/* Type */}
+                <div className="w-12 flex items-center gap-1">
+                  {t.type === "buy" ? (
+                    <>
+                      <ArrowUpRight className="h-3 w-3 text-green" />
+                      <span className="font-semibold text-green">BUY</span>
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownRight className="h-3 w-3 text-crimson" />
+                      <span className="font-semibold text-crimson">SELL</span>
+                    </>
+                  )}
+                </div>
+                {/* Trader */}
+                <span className="w-16 text-right font-mono text-txt-muted text-[10px] hidden sm:block">
+                  {t.trader ? shortenAddr(t.trader) : "—"}
+                </span>
+                {/* Token amount */}
+                <span className="flex-1 text-right font-mono text-txt-secondary">
+                  {t.tokenAmount > 0 ? fmtAmount(t.tokenAmount) : "—"}
+                </span>
+                {/* Quote amount */}
+                <span className="w-20 text-right font-mono text-txt-muted">
+                  {(t.quoteAmount ?? t.pigeonAmount) > 0
+                    ? fmtAmount(t.quoteAmount ?? t.pigeonAmount)
+                    : "—"}
+                  <span className="text-[9px] ml-0.5 text-txt-muted/60">{qs}</span>
+                </span>
+                {/* Price */}
+                <span className="w-16 text-right font-mono text-txt-muted text-[10px] hidden sm:block">
+                  {fmtPrice(t.price)}
+                </span>
+                {/* Time */}
+                <span className="w-10 text-right text-txt-muted">
+                  {t.timestamp ? timeAgo(t.timestamp) : "—"}
+                </span>
+                {/* Explorer */}
+                <a href={`https://solscan.io/tx/${t.signature}`} target="_blank" rel="noopener noreferrer"
+                  className="w-5 flex justify-end text-txt-muted hover:text-teal transition-colors">
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
               </div>
-              {/* Token amount */}
-              <span className="flex-1 text-right font-mono text-txt-secondary">
-                {t.tokenAmount > 0 ? fmtAmount(t.tokenAmount) : "—"}
-              </span>
-              {/* PIGEON */}
-              <span className="w-16 text-right font-mono text-txt-muted">
-                {t.pigeonAmount > 0 ? fmtAmount(t.pigeonAmount) : "—"}
-              </span>
-              {/* Time */}
-              <span className="w-10 text-right text-txt-muted">
-                {t.timestamp ? timeAgo(t.timestamp) : "—"}
-              </span>
-              {/* Explorer */}
-              <a href={`https://solscan.io/tx/${t.signature}`} target="_blank" rel="noopener noreferrer"
-                className="w-6 flex justify-end text-txt-muted hover:text-teal transition-colors">
-                <ExternalLink className="h-2.5 w-2.5" />
-              </a>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

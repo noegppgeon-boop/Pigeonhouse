@@ -1,17 +1,22 @@
 import { rateLimit, getClientIP } from "@/lib/rateLimit";
 import { NextResponse } from "next/server";
 import { PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
-import { PIGEON_HOUSE_PROGRAM_ID, PIGEON_MINT } from "@/lib/constants";
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PIGEON_HOUSE_PROGRAM_ID, QUOTE_ASSETS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-const HELIUS_KEY = process.env.NEXT_PUBLIC_RPC_URL?.match(/api-key=([^&]+)/)?.[1]
-  || process.env.HELIUS_API_KEY
+const HELIUS_KEY = process.env.HELIUS_API_KEY
+  || process.env.NEXT_PUBLIC_RPC_URL?.match(/api-key=([^&]+)/)?.[1]
   || "eb49a51b-3242-4758-8de7-db8d9f629e57";
 
 const cache = new Map<string, { data: any; ts: number }>();
-const CACHE_TTL = 15_000; // 15s
+const CACHE_TTL = 15_000;
+
+// All known quote mints
+const QUOTE_MINTS = new Set(
+  Object.values(QUOTE_ASSETS).map(q => q.mint.toBase58())
+);
 
 export async function GET(
   _req: Request,
@@ -29,32 +34,15 @@ export async function GET(
   }
 
   try {
-    const pigeonMint = "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump";
-
-    const programId = new PublicKey("BV1RxkAaD5DjXMsnofkVikFUUYdrDg1v8YgsQ3iyDNoL");
+    const mintPubkey = new PublicKey(mint);
     const [bondingCurvePDA] = PublicKey.findProgramAddressSync(
-      [Buffer.from("bonding_curve"), new PublicKey(mint).toBuffer()],
-      programId
+      [Buffer.from("bonding_curve"), mintPubkey.toBuffer()],
+      PIGEON_HOUSE_PROGRAM_ID
     );
     const bcAddr = bondingCurvePDA.toBase58();
-    // Bonding curve's vault ATAs (Token-2022 PDAs)
-    let bcPigeonVault: string;
-    let bcTokenVault: string;
-    try {
-      bcPigeonVault = getAssociatedTokenAddressSync(
-        PIGEON_MINT, bondingCurvePDA, true, TOKEN_2022_PROGRAM_ID
-      ).toBase58();
-      bcTokenVault = getAssociatedTokenAddressSync(
-        new PublicKey(mint), bondingCurvePDA, true, TOKEN_2022_PROGRAM_ID
-      ).toBase58();
-    } catch {
-      // Fallback: derive from userAccount instead of tokenAccount
-      bcPigeonVault = "";
-      bcTokenVault = "";
-    }
 
-    // Single Helius Enhanced Transactions call — returns tokenTransfers parsed
-    const url = `https://api-mainnet.helius-rpc.com/v0/addresses/${mint}/transactions?api-key=${HELIUS_KEY}&limit=50`;
+    // Fetch enhanced TXs for the token mint
+    const url = `https://api-mainnet.helius-rpc.com/v0/addresses/${mint}/transactions?api-key=${HELIUS_KEY}&limit=100`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Helius ${res.status}`);
     const txs: any[] = await res.json();
@@ -64,56 +52,73 @@ export async function GET(
     for (const tx of txs) {
       if (!tx.tokenTransfers || tx.tokenTransfers.length === 0) continue;
 
-      // Find PIGEON and token transfers involving the bonding curve
-      let pigeonAmount = 0;
+      let quoteAmount = 0;
       let tokenAmount = 0;
       let type: "buy" | "sell" | null = null;
       let trader = "";
+      let quoteMint = "";
+      let quoteSymbol = "";
 
       for (const t of tx.tokenTransfers) {
-        const isPigeon = t.mint === pigeonMint;
-        const isToken = t.mint === mint;
         const amt = Math.abs(t.tokenAmount || 0);
+        if (amt === 0) continue;
 
-        if (isPigeon) {
-          // Match by token account OR user account (BC PDA)
-          const toVault = t.toTokenAccount === bcPigeonVault || t.toUserAccount === bcAddr;
-          const fromVault = t.fromTokenAccount === bcPigeonVault || t.fromUserAccount === bcAddr;
+        const isQuote = QUOTE_MINTS.has(t.mint);
+        const isToken = t.mint === mint;
 
-          if (toVault && !type) {
-            // PIGEON going TO bonding curve = BUY
-            pigeonAmount = amt;
+        // Check if this transfer involves the bonding curve
+        const toBC = t.toUserAccount === bcAddr;
+        const fromBC = t.fromUserAccount === bcAddr;
+
+        if (isQuote && (toBC || fromBC)) {
+          if (toBC && !type) {
+            // Quote going TO bonding curve = BUY
             type = "buy";
+            quoteAmount = amt;
             trader = t.fromUserAccount || "";
-          } else if (fromVault && !type) {
-            // PIGEON coming FROM bonding curve = SELL
-            pigeonAmount = amt;
+            quoteMint = t.mint;
+          } else if (fromBC && !type) {
+            // Quote coming FROM bonding curve = SELL
             type = "sell";
+            quoteAmount = amt;
             trader = t.toUserAccount || "";
+            quoteMint = t.mint;
           }
         }
 
-        if (isToken) {
-          const toVault = t.toTokenAccount === bcTokenVault || t.toUserAccount === bcAddr;
-          const fromVault = t.fromTokenAccount === bcTokenVault || t.fromUserAccount === bcAddr;
-          if (toVault || fromVault) {
-            if (amt > tokenAmount) tokenAmount = amt;
+        if (isToken && (toBC || fromBC)) {
+          if (amt > tokenAmount) tokenAmount = amt;
+          // Double-check type from token flow
+          if (fromBC && !type) {
+            type = "buy";
+            trader = t.toUserAccount || "";
+          } else if (toBC && !type) {
+            type = "sell";
+            trader = t.fromUserAccount || "";
           }
         }
       }
 
       if (!type || tokenAmount === 0) continue;
 
-      // Exclude fee/treasury transfers from amount
-      // Use the largest PIGEON transfer as the trade amount
-      const price = tokenAmount > 0 ? pigeonAmount / tokenAmount : 0;
+      // Resolve quote symbol
+      for (const [key, val] of Object.entries(QUOTE_ASSETS)) {
+        if (val.mint.toBase58() === quoteMint) {
+          quoteSymbol = val.symbol;
+          break;
+        }
+      }
+
+      const price = tokenAmount > 0 ? quoteAmount / tokenAmount : 0;
 
       trades.push({
         type,
         signature: tx.signature,
         timestamp: tx.timestamp || 0,
         tokenAmount,
-        pigeonAmount,
+        pigeonAmount: quoteAmount, // keep field name for chart compat
+        quoteAmount,
+        quoteSymbol: quoteSymbol || "PIGEON",
         price,
         trader,
       });

@@ -281,7 +281,7 @@ export default function TokenPage() {
             currentReserves={curve.realPigeonReserves.toNumber() / 1e6}
             quoteSymbol={quoteSymbol}
           />
-          <RecentTrades mint={mintAddress} />
+          <RecentTrades mint={mintAddress} quoteSymbol={quoteSymbol} />
 
           {/* Token Info */}
           <div className="card p-4 space-y-3">
