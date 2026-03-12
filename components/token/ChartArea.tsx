@@ -20,6 +20,7 @@ interface Candle {
   l: number;
   c: number;
   volume: number;
+  tradeCount: number;
 }
 
 type Timeframe = "1M" | "5M" | "15M" | "1H" | "4H";
@@ -45,43 +46,65 @@ function buildCandles(trades: Trade[], tfSec: number): Candle[] {
   if (!trades.length) return [];
   const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
   const buckets = new Map<number, Trade[]>();
+
   for (const t of sorted) {
     if (!t.timestamp || !t.price || t.price <= 0) continue;
     const bucket = Math.floor(t.timestamp / tfSec) * tfSec;
     if (!buckets.has(bucket)) buckets.set(bucket, []);
     buckets.get(bucket)!.push(t);
   }
+
   const candles: Candle[] = [];
   const keys = [...buckets.keys()].sort((a, b) => a - b);
+
   for (const k of keys) {
     const group = buckets.get(k)!;
     const prices = group.map((t) => t.price);
-    const o = prices[0];
-    const c = prices[prices.length - 1];
     candles.push({
       time: k,
-      o,
+      o: prices[0],
       h: Math.max(...prices),
       l: Math.min(...prices),
-      c,
+      c: prices[prices.length - 1],
       volume: group.reduce((s, t) => s + t.pigeonAmount, 0),
+      tradeCount: group.length,
     });
   }
+
+  // Fill gaps between candles (max 50 gap candles to avoid bloat)
   if (candles.length >= 2) {
     const filled: Candle[] = [candles[0]];
     for (let i = 1; i < candles.length; i++) {
       const prev = candles[i - 1];
       const curr = candles[i];
-      let t = prev.time + tfSec;
-      while (t < curr.time) {
-        filled.push({ time: t, o: prev.c, h: prev.c, l: prev.c, c: prev.c, volume: 0 });
-        t += tfSec;
+      const gapCount = Math.floor((curr.time - prev.time) / tfSec) - 1;
+      // Only fill small gaps (< 20 candles), skip big ones
+      if (gapCount > 0 && gapCount <= 20) {
+        let t = prev.time + tfSec;
+        while (t < curr.time) {
+          filled.push({ time: t, o: prev.c, h: prev.c, l: prev.c, c: prev.c, volume: 0, tradeCount: 0 });
+          t += tfSec;
+        }
       }
       filled.push(curr);
     }
-    return filled.slice(-200);
+    return filled.slice(-300);
   }
   return candles;
+}
+
+/* ── Auto-select best timeframe based on trade spread ── */
+function autoTimeframe(trades: Trade[]): Timeframe {
+  if (trades.length < 2) return "5M";
+  const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+  const span = sorted[sorted.length - 1].timestamp - sorted[0].timestamp;
+
+  // Target: 15-60 candles for good readability
+  if (span < 600) return "1M";       // < 10min
+  if (span < 3600) return "5M";      // < 1h
+  if (span < 14400) return "15M";    // < 4h
+  if (span < 86400) return "1H";     // < 24h
+  return "4H";
 }
 
 /* ── Theme (parchment palette) ── */
@@ -92,8 +115,8 @@ const CHART_COLORS = {
   crosshair: "#A67C52",
   upColor: "#1A7A6D",
   downColor: "#8B2500",
-  volumeUp: "rgba(26, 122, 109, 0.2)",
-  volumeDown: "rgba(139, 37, 0, 0.2)",
+  volumeUp: "rgba(26, 122, 109, 0.25)",
+  volumeDown: "rgba(139, 37, 0, 0.25)",
 };
 
 interface ChartProps {
@@ -109,16 +132,15 @@ interface ChartProps {
 export default function ChartArea({ mint, progress = 0, isComplete = false, graduationThreshold = 0, currentReserves = 0, quoteSymbol = "PIGEON" }: ChartProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tf, setTf] = useState<Timeframe>("5M");
+  const [tf, setTf] = useState<Timeframe | null>(null); // null = auto
+  const [userSetTf, setUserSetTf] = useState(false);
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const candleSeriesRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const volumeSeriesRef = useRef<any>(null);
   const [chartReady, setChartReady] = useState(false);
+  const initialFitDone = useRef(false);
 
   // Fetch trades
   useEffect(() => {
@@ -138,7 +160,24 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     return () => { cancelled = true; clearInterval(iv); };
   }, [mint]);
 
-  const candles = useMemo(() => buildCandles(trades, TF_SECONDS[tf]), [trades, tf]);
+  // Auto-select timeframe when trades load (only if user hasn't manually chosen)
+  useEffect(() => {
+    if (!userSetTf && trades.length > 0) {
+      setTf(autoTimeframe(trades));
+    }
+  }, [trades, userSetTf]);
+
+  const activeTf = tf ?? "5M";
+  const candles = useMemo(() => buildCandles(trades, TF_SECONDS[activeTf]), [trades, activeTf]);
+
+  // Calculate dynamic bar spacing based on candle count
+  const barSpacing = useMemo(() => {
+    if (candles.length <= 5) return 40;
+    if (candles.length <= 15) return 24;
+    if (candles.length <= 40) return 16;
+    if (candles.length <= 80) return 10;
+    return 6;
+  }, [candles.length]);
 
   // Create chart (dynamic import to avoid SSR)
   useEffect(() => {
@@ -168,13 +207,15 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         },
         rightPriceScale: {
           borderColor: CHART_COLORS.gridLines,
-          scaleMargins: { top: 0.1, bottom: 0.25 },
+          scaleMargins: { top: 0.08, bottom: 0.22 },
         },
         timeScale: {
           borderColor: CHART_COLORS.gridLines,
           timeVisible: true,
           secondsVisible: false,
-          barSpacing: 14,
+          barSpacing: 16,
+          minBarSpacing: 4,
+          rightOffset: 3,
         },
         handleScale: { axisPressedMouseMove: true },
         handleScroll: { vertTouchDrag: false },
@@ -196,7 +237,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       });
 
       chart.priceScale("volume").applyOptions({
-        scaleMargins: { top: 0.8, bottom: 0 },
+        scaleMargins: { top: 0.82, bottom: 0 },
       });
 
       chartRef.current = chart;
@@ -210,10 +251,8 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       });
       ro.observe(chartContainerRef.current!);
 
-      // Cleanup inside the promise
-      const container = chartContainerRef.current;
       (chart as any).__ro = ro;
-      (chart as any).__container = container;
+      (chart as any).__container = chartContainerRef.current;
     });
 
     return () => {
@@ -228,6 +267,7 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         candleSeriesRef.current = null;
         volumeSeriesRef.current = null;
         setChartReady(false);
+        initialFitDone.current = false;
       }
     };
   }, []);
@@ -253,10 +293,24 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     candleSeriesRef.current.setData(candleData);
     volumeSeriesRef.current.setData(volumeData);
 
-    if (chartRef.current && candles.length > 0) {
+    // Update bar spacing dynamically
+    if (chartRef.current) {
+      chartRef.current.timeScale().applyOptions({ barSpacing });
+    }
+
+    // Only fit content on first load, not on every refresh (preserves user zoom)
+    if (chartRef.current && candles.length > 0 && !initialFitDone.current) {
+      chartRef.current.timeScale().fitContent();
+      initialFitDone.current = true;
+    }
+  }, [candles, chartReady, barSpacing]);
+
+  // Reset fit when timeframe changes
+  useEffect(() => {
+    if (chartRef.current && candles.length > 0 && userSetTf) {
       chartRef.current.timeScale().fitContent();
     }
-  }, [candles, chartReady]);
+  }, [activeTf]);
 
   // Price helpers
   const formatPrice = useCallback((price: number) => {
@@ -274,6 +328,8 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
       ? ((lastCandle.c - firstCandle.o) / firstCandle.o) * 100
       : 0;
 
+  const tradeCount = trades.length;
+
   return (
     <div className="card overflow-hidden">
       {/* Header */}
@@ -288,13 +344,12 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
               <span className="text-txt font-mono font-medium">
                 {formatPrice(lastCandle.c)}
               </span>
-              <span
-                className={`font-semibold ${
-                  priceChange >= 0 ? "text-teal" : "text-crimson"
-                }`}
-              >
+              <span className={`font-semibold ${priceChange >= 0 ? "text-teal" : "text-crimson"}`}>
                 {priceChange >= 0 ? "+" : ""}
                 {priceChange.toFixed(2)}%
+              </span>
+              <span className="text-txt-muted text-[10px]">
+                {tradeCount} trade{tradeCount !== 1 ? "s" : ""}
               </span>
             </div>
           )}
@@ -305,9 +360,9 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
           {(Object.keys(TF_LABELS) as Timeframe[]).map((t) => (
             <button
               key={t}
-              onClick={() => setTf(t)}
+              onClick={() => { setTf(t); setUserSetTf(true); initialFitDone.current = false; }}
               className={`px-2.5 py-1 rounded text-[10px] font-semibold transition-all ${
-                tf === t
+                activeTf === t
                   ? "bg-bg-card text-txt shadow-sm"
                   : "text-txt-muted hover:text-txt-secondary"
               }`}
@@ -347,7 +402,6 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
                   : "linear-gradient(90deg, #8B2500, #C73E1D)",
               }}
             />
-            {/* Graduation marker */}
             <div className="absolute top-0 bottom-0 w-px bg-teal" style={{ left: "100%" }} />
           </div>
           <div className="flex justify-between mt-1">
