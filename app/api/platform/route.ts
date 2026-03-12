@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 // Tokens created before graduation threshold fix (2026-03-12)
 // Hidden from board but stats still count
-const HIDDEN_BEFORE_EPOCH = 1773316800; // 2026-03-12T12:00:00Z — hide tokens created before graduation fix
+const HIDDEN_BEFORE_EPOCH = 1773330100; // 2026-03-12T15:41:40Z — hide all test tokens
 
 // Old BondingCurve layout (pre-multi-quote): no quote_mint field
 // New BondingCurve layout: has quote_mint (Pubkey, 32 bytes) after creator

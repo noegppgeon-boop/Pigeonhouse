@@ -223,10 +223,12 @@ export default function TokenPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <MetricCard label="Price" value={(() => {
           const usd = toUsd(price, quoteKey, usdPrices);
-          if (usd > 0 && usd < 0.000001) return usd.toExponential(2);
-          if (usd > 0 && usd < 0.01) return `${usd.toFixed(6)}`;
-          if (usd > 0) return `${usd.toFixed(4)}`;
-          return price < 0.001 ? price.toExponential(2) : price.toFixed(6);
+          if (usd > 0 && usd < 0.000001) return `$${usd.toFixed(9)}`;
+          if (usd > 0 && usd < 0.01) return `$${usd.toFixed(6)}`;
+          if (usd > 0) return `$${usd.toFixed(4)}`;
+          if (price < 0.000001) return price.toFixed(9);
+          if (price < 0.001) return price.toFixed(6);
+          return price.toFixed(4);
         })()} unit={usdPrices.pigeon > 0 ? "USD" : quoteSymbol} icon={TrendingUp} color="text-txt" />
         <MetricCard label="Market Cap" value={(() => {
           try {
