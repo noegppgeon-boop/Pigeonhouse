@@ -58,7 +58,8 @@ export default function RecentTrades({ mint, quoteSymbol: defaultQuoteSymbol = "
 
   function fmtPrice(p: number) {
     if (p === 0) return "—";
-    if (p < 0.000001) return p.toExponential(1);
+    if (p < 0.00000001) return p.toFixed(12);
+    if (p < 0.000001) return p.toFixed(10);
     if (p < 0.001) return p.toFixed(6);
     if (p < 1) return p.toFixed(4);
     return p.toFixed(2);

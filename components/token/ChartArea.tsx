@@ -255,18 +255,19 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
         handleScroll: { vertTouchDrag: false },
       });
 
-      // Price format for small numbers
+      // Price format for small numbers — never use scientific notation
       const priceFormat = {
         type: "custom" as const,
         formatter: (price: number) => {
           if (price === 0) return "0";
-          if (price < 0.000001) return price.toExponential(2);
+          if (price < 0.00000001) return price.toFixed(12);
+          if (price < 0.000001) return price.toFixed(10);
           if (price < 0.0001) return price.toFixed(8);
           if (price < 0.01) return price.toFixed(6);
           if (price < 1) return price.toFixed(4);
           return price.toFixed(2);
         },
-        minMove: 0.000001,
+        minMove: 0.00000001,
       };
 
       // Create both series — we'll toggle visibility
@@ -389,7 +390,8 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
 
   const formatPrice = useCallback((price: number) => {
     if (price === 0) return "0";
-    if (price < 0.000001) return price.toExponential(2);
+    if (price < 0.00000001) return price.toFixed(12);
+    if (price < 0.000001) return price.toFixed(10);
     if (price < 0.001) return price.toFixed(8);
     if (price < 1) return price.toFixed(6);
     return price.toFixed(4);
