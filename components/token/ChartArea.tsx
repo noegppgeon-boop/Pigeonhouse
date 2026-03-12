@@ -96,8 +96,17 @@ const CHART_COLORS = {
   volumeDown: "rgba(139, 37, 0, 0.2)",
 };
 
+interface ChartProps {
+  mint?: string;
+  progress?: number;
+  isComplete?: boolean;
+  graduationThreshold?: number;
+  currentReserves?: number;
+  quoteSymbol?: string;
+}
+
 /* ── Main component ── */
-export default function ChartArea({ mint }: { mint?: string }) {
+export default function ChartArea({ mint, progress = 0, isComplete = false, graduationThreshold = 0, currentReserves = 0, quoteSymbol = "PIGEON" }: ChartProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [tf, setTf] = useState<Timeframe>("5M");
@@ -308,6 +317,54 @@ export default function ChartArea({ mint }: { mint?: string }) {
           ))}
         </div>
       </div>
+
+      {/* Bonding Curve Progress */}
+      {!isComplete && graduationThreshold > 0 && (
+        <div className="px-4 py-2.5 border-b border-border bg-bg-elevated/50">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-crimson animate-pulse" />
+              <span className="text-[10px] font-semibold text-txt-secondary uppercase tracking-wider">Bonding Curve</span>
+            </div>
+            <div className="flex items-center gap-3 text-[10px]">
+              <span className="text-txt-muted">
+                {currentReserves.toLocaleString(undefined, { maximumFractionDigits: 0 })} / {graduationThreshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} {quoteSymbol}
+              </span>
+              <span className={`font-mono font-bold ${progress >= 80 ? "text-amber-500" : progress >= 40 ? "text-bronze" : "text-crimson"}`}>
+                {progress.toFixed(1)}%
+              </span>
+            </div>
+          </div>
+          <div className="relative h-2 rounded-full bg-border overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(progress, 100)}%`,
+                background: progress >= 80
+                  ? "linear-gradient(90deg, #D97706, #F59E0B)"
+                  : progress >= 40
+                  ? "linear-gradient(90deg, #A67C52, #D97706)"
+                  : "linear-gradient(90deg, #8B2500, #C73E1D)",
+              }}
+            />
+            {/* Graduation marker */}
+            <div className="absolute top-0 bottom-0 w-px bg-teal" style={{ left: "100%" }} />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[9px] text-txt-muted">0</span>
+            <span className="text-[9px] text-teal font-mono">🎓 Graduation</span>
+          </div>
+        </div>
+      )}
+
+      {isComplete && (
+        <div className="px-4 py-2 border-b border-teal/20 bg-teal/5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold text-teal">🎓 Graduated — Trading on Raydium CPMM</span>
+            <span className="text-[9px] text-teal/60 font-mono ml-auto">1.20% creator fee → burn 🔥</span>
+          </div>
+        </div>
+      )}
 
       {/* Chart */}
       <div style={{ position: "relative" }}>

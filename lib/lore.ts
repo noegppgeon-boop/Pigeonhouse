@@ -80,20 +80,20 @@ export const QUOTE_LORE = {
   sol: {
     label:      "SOL",
     tagline:    "Reserve-backed. Building the war chest.",
-    feeNote:    "Fees split between PIGEON burn and SOL reserve",
-    desc:       "Launch with SOL liquidity. A portion of fees build a strategic reserve, the rest fuels the burn.",
+    feeNote:    "Fees build a strategic SOL reserve for the ecosystem",
+    desc:       "Launch with SOL liquidity. Trade fees accumulate in a strategic reserve, strengthening the protocol treasury.",
     cta:        "Forge with SOL",
     graduation: "~70 SOL threshold",
-    ritual:     "SOL accrued, swept to PIGEON, then burned",
+    ritual:     "SOL accumulated in strategic reserve",
   },
   skr: {
     label:      "SKR",
     tagline:    "Strategic reserves. Long-term alignment.",
-    feeNote:    "Fees split between PIGEON burn and SKR reserve",
-    desc:       "Align with the SKR ecosystem. Fees fund both the burn engine and a strategic SKR reserve.",
+    feeNote:    "Fees build a strategic SKR reserve for the ecosystem",
+    desc:       "Align with the SKR ecosystem. Trade fees accumulate in a strategic reserve, deepening protocol alignment.",
     cta:        "Seal with SKR",
     graduation: "~2.36M SKR threshold",
-    ritual:     "SKR accrued, swept to PIGEON, then burned",
+    ritual:     "SKR accumulated in strategic reserve",
   },
 } as const;
 
@@ -259,7 +259,7 @@ export const HOW_IT_WORKS = [
   { label: "Create",   desc: "Token launches on bonding curve instantly" },
   { label: "Burn",     desc: "1% of every trade burned permanently" },
   { label: "Graduate", desc: "At threshold → Meteora pool + LP locked" },
-  { label: "Hook",     desc: "Post-graduation: transfer fees → sweep → burn" },
+  { label: "Hook",     desc: "Post-graduation: 0.25% TransferFee → accrual vault → permissionless sweep" },
 ] as const;
 
 /* ═══════════════════════════════════════

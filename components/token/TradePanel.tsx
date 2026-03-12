@@ -15,9 +15,13 @@ import {
   formatPigeon,
   formatToken,
 } from "@/lib/pigeon_house";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, getAccount } from "@solana/spl-token";
 import { DEFAULT_SLIPPAGE_BPS, PIGEON_DECIMALS, PIGEON_MINT, TOKEN_DECIMALS, getQuoteKeyByMint, getQuoteAssetByMint, QUOTE_ASSETS, type QuoteAssetKey } from "@/lib/constants";
+import { executeRouterSwap } from "@/lib/trade_router";
+
+const SOL_MINT = "So11111111111111111111111111111111111111112";
+const PIGEON_MINT_STR = "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump";
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
@@ -65,6 +69,8 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   const [loading, setLoading] = useState(false);
   const [txSig, setTxSig] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [payWithSol, setPayWithSol] = useState(false);
+  const [jupQuote, setJupQuote] = useState<any>(null);
 
   // Wallet balances
   const [quoteBalance, setQuoteBalance] = useState<number | null>(null);
@@ -141,7 +147,8 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
   }, [amountNum, tab, quoteBalance, tokenBalance]);
 
   const quote = useMemo(() => {
-    if (!amountBN || curve.complete) return null;
+    if (!amountBN) return null;
+    if (curve.complete) return null; // Post-graduation: no bonding curve quote
     if (tab === "buy") return getQuoteBuy(curve, amountBN, config.platformFeeBps);
     return getQuoteSell(curve, amountBN, config.platformFeeBps);
   }, [amountBN, curve, config, tab]);
@@ -199,7 +206,46 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
     try {
       const mint = new PublicKey(mintAddress);
       let sig: string;
-      if (tab === "buy") {
+
+      if (curve.complete) {
+        // Post-graduation: route through Trade Router → Raydium CPMM
+        const decimals = tab === "buy" ? quoteDecimals : TOKEN_DECIMALS;
+        const rawAmount = BigInt(Math.floor(amountNum * 10 ** decimals));
+        // Slippage: for now 0 min out (user-facing slippage handled by CPMM)
+        const minOut = BigInt(0);
+
+        sig = await executeRouterSwap({
+          wallet: walletAdapter,
+          connection,
+          tokenMint: mint,
+          quoteMint: new PublicKey(quoteMintStr),
+          isBuy: tab === "buy",
+          amountIn: rawAmount,
+          minimumAmountOut: minOut,
+        });
+      } else if (tab === "buy" && payWithSol && jupQuote && !jupQuote.error) {
+        // SOL → quote asset swap via Jupiter, then buy on bonding curve
+        // Step 1: Get Jupiter swap TX
+        const swapRes = await fetch("/api/jupiter-swap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quoteResponse: jupQuote, userPublicKey: publicKey.toBase58() }),
+        });
+        const swapData = await swapRes.json();
+        if (swapData.error) throw new Error("Jupiter swap failed: " + swapData.error);
+
+        // Step 2: Sign and send Jupiter swap
+        const txBuf = Buffer.from(swapData.swapTransaction, "base64");
+        const swapTx = VersionedTransaction.deserialize(txBuf);
+        const signedSwap = await signTransaction!(swapTx as any);
+        const swapSig = await connection.sendRawTransaction(signedSwap.serialize(), { skipPreflight: true });
+        await connection.confirmTransaction(swapSig, "confirmed");
+
+        // Step 3: Now buy with the received quote asset
+        // Use 95% of Jupiter output to account for rounding
+        const quoteOut = new BN(jupQuote.outAmount).mul(new BN(95)).div(new BN(100));
+        sig = await executeBuy(walletAdapter, mint, quoteOut, slippageBps, referrer || undefined);
+      } else if (tab === "buy") {
         sig = await executeBuy(walletAdapter, mint, amountBN, slippageBps, referrer || undefined);
       } else {
         sig = await executeSell(walletAdapter, mint, amountBN, slippageBps, referrer || undefined);
@@ -218,9 +264,24 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
     }
   }, [publicKey, amountBN, wallet, tab, mintAddress, slippageBps, signTransaction, signAllTransactions, onSuccess, exceedsBalance, referrer]);
 
-  const isDisabled = !connected || !amountBN || loading || curve.complete || exceedsBalance;
-  const currentBalance = tab === "buy" ? quoteBalance : tokenBalance;
-  const balanceLabel = tab === "buy" ? quoteSymbol : curve.symbol;
+  // Jupiter SOL→QuoteAsset quote when payWithSol is enabled
+  useEffect(() => {
+    if (!payWithSol || tab !== "buy" || !amountNum || amountNum <= 0) {
+      setJupQuote(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    const solLamports = Math.floor(amountNum * 1e9);
+    fetch(`/api/jupiter-quote?inputMint=${SOL_MINT}&outputMint=${quoteMintStr}&amount=${solLamports}&slippageBps=${slippageBps}`, { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(data => { if (!ctrl.signal.aborted) setJupQuote(data); })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [payWithSol, tab, amountNum, slippageBps, quoteMintStr]);
+
+  const isDisabled = !connected || !amountBN || loading || exceedsBalance || (payWithSol && tab === "buy" && !jupQuote);
+  const currentBalance = tab === "buy" ? (payWithSol ? solBalance : quoteBalance) : tokenBalance;
+  const balanceLabel = tab === "buy" ? (payWithSol ? "SOL" : quoteSymbol) : curve.symbol;
 
   return (
     <div className="card p-5">
@@ -267,6 +328,31 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
         </div>
       )}
 
+      {/* Pay with SOL toggle (buy only, non-SOL quotes, pre-graduation) */}
+      {tab === "buy" && quoteKey !== "sol" && !curve.complete && (
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-caption text-txt-muted">Pay with</span>
+          <div className="flex rounded-lg bg-bg-elevated p-[2px]">
+            <button
+              onClick={() => { setPayWithSol(false); setAmount(""); setError(null); }}
+              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                !payWithSol ? `${quoteAsset.colorClass} ${quoteAsset.textClass}` : "text-txt-muted hover:text-txt-secondary"
+              }`}
+            >
+              {quoteAsset.icon} {quoteSymbol}
+            </button>
+            <button
+              onClick={() => { setPayWithSol(true); setAmount(""); setError(null); }}
+              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                payWithSol ? "bg-purple-500/15 text-purple-400" : "text-txt-muted hover:text-txt-secondary"
+              }`}
+            >
+              ◎ SOL
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className={`rounded-xl bg-bg-elevated p-4 mb-2 border transition-colors ${
         exceedsBalance ? "border-burn/50" : "border-transparent"
@@ -280,7 +366,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             className="flex-1 bg-transparent text-xl font-mono text-txt outline-none placeholder:text-txt-muted [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
           <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
-            {tab === "buy" ? quoteSymbol : curve.symbol}
+            {tab === "buy" ? (payWithSol ? "SOL" : quoteSymbol) : curve.symbol}
           </span>
         </div>
         {exceedsBalance && (
@@ -291,10 +377,10 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
       {/* Quick amount presets */}
       {tab === "buy" && (
         <div className="flex gap-1.5 mb-2">
-          {[10, 50, 100, 500].map((val) => (
+          {(payWithSol ? [0.05, 0.1, 0.5, 1] : [10, 50, 100, 500]).map((val) => (
             <button key={val} onClick={() => { setAmount(String(val)); setError(null); }}
               className="flex-1 rounded-lg bg-bg-elevated py-1.5 text-caption font-mono text-txt-muted hover:text-teal hover:bg-teal/8 border border-transparent hover:border-teal/20 transition-all">
-              {val}
+              {payWithSol ? `${val} ◎` : val}
             </button>
           ))}
         </div>
@@ -363,23 +449,42 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
         <div className="text-caption text-txt-muted mb-1">You receive</div>
         <div className="flex items-center gap-2">
           <span className="flex-1 text-xl font-mono text-txt">
-            {quote
-              ? tab === "buy"
-                ? formatToken((quote as { tokensOut: BN }).tokensOut)
-                : formatPigeon((quote as { netPigeonOut: BN }).netPigeonOut)
-              : "0.00"}
+            {curve.complete
+              ? amountNum > 0 ? "~market rate" : "0.00"
+              : quote
+                ? tab === "buy"
+                  ? formatToken((quote as { tokensOut: BN }).tokensOut)
+                  : formatPigeon((quote as { netPigeonOut: BN }).netPigeonOut)
+                : "0.00"}
           </span>
           <span className="text-body-sm font-semibold text-txt-secondary px-3 py-1.5 bg-border rounded-lg">
             {tab === "buy" ? curve.symbol : quoteSymbol}
           </span>
         </div>
+        {curve.complete && amountNum > 0 && (
+          <div className="text-micro text-txt-muted mt-1">Routed via Raydium CPMM · 1% platform fee (0.5% burn 🔥)</div>
+        )}
+        {payWithSol && tab === "buy" && jupQuote && !jupQuote.error && amountNum > 0 && (
+          <div className="text-micro text-txt-muted mt-1.5">
+            ◎ {amountNum} SOL → ~{(Number(jupQuote.outAmount) / 10 ** quoteDecimals).toLocaleString()} {quoteSymbol} via Jupiter → Token
+          </div>
+        )}
       </div>
 
       {/* Trade details */}
-      {quote && amountNum > 0 && (
+      {((quote && amountNum > 0) || (curve.complete && amountNum > 0)) && (
         <div className="space-y-2 mb-4">
-          {/* Burn */}
-          {burnEstimate && !burnEstimate.isZero() && (
+          {/* Burn — bonding curve or router */}
+          {curve.complete && tab === "buy" && amountNum > 0 ? (
+            <div className="flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-caption"
+                 style={{ background: "var(--burn-dim)", borderColor: "rgba(255,92,58,0.12)" }}>
+              <Flame className="h-3.5 w-3.5 text-crimson shrink-0" />
+              <span className="text-crimson">
+                <span className="font-mono font-semibold">{(amountNum * 0.005).toFixed(quoteDecimals)}</span>
+                {" "}{quoteSymbol} burned instantly 🔥
+              </span>
+            </div>
+          ) : quoteKey === "pigeon" && burnEstimate && !burnEstimate.isZero() ? (
             <div className="flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-caption"
                  style={{ background: "var(--burn-dim)", borderColor: "rgba(255,92,58,0.12)" }}>
               <Flame className="h-3.5 w-3.5 text-crimson shrink-0" />
@@ -388,7 +493,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
                 {" "}PIGEON burned 🔥
               </span>
             </div>
-          )}
+          ) : null}
 
           {/* Price impact & fee */}
           <div className="rounded-xl bg-bg-elevated px-3 py-2 space-y-1">
@@ -402,7 +507,11 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
             )}
             <div className="flex justify-between text-caption">
               <span className="text-txt-muted">Trade fee</span>
-              <span className="text-txt-muted">2% · burns PIGEON</span>
+              <span className="text-txt-muted">
+                {curve.complete
+                  ? "1% · 0.5% burn + 0.5% treasury"
+                  : `2% · ${quoteKey === "pigeon" ? "burns PIGEON" : `${quoteSymbol} strategic reserve`}`}
+              </span>
             </div>
           </div>
         </div>
@@ -428,8 +537,6 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
               <Loader2 className="h-4 w-4 animate-spin" />
               Confirming...
             </span>
-          ) : curve.complete ? (
-            "Curve Graduated"
           ) : exceedsBalance ? (
             `Insufficient ${balanceLabel}`
           ) : !amountBN ? (

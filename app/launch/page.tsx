@@ -14,6 +14,7 @@ import BN from "bn.js";
 import Link from "next/link";
 import { executeCreateToken } from "@/lib/pigeon_house";
 import { uploadTokenAssets } from "@/lib/upload";
+import { Keypair } from "@solana/web3.js";
 import { PIGEON_DECIMALS, BURN_FEE_BPS, TREASURY_FEE_BPS, type QuoteAssetKey, QUOTE_ASSETS } from "@/lib/constants";
 import { shortenAddress } from "@/lib/utils";
 import { SECTION_HEADERS, LAUNCH_COPY, RESULT_COPY, HOW_IT_WORKS, QUOTE_LORE } from "@/lib/lore";
@@ -91,6 +92,20 @@ export default function LaunchPage() {
         uri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
       }
 
+      // Fetch pre-ground vanity keypair ending with "burn"
+      setStatus("Preparing vanity mint address...");
+      let vanityKeypair: Keypair | undefined;
+      try {
+        const res = await fetch("/api/vanity-mint");
+        if (res.ok) {
+          const data = await res.json();
+          vanityKeypair = Keypair.fromSecretKey(Uint8Array.from(data.secretKey));
+          setStatus(`Vanity mint: ...${data.address.slice(-8)}`);
+        }
+      } catch {
+        // Pool empty or unavailable — fall back to random keypair
+      }
+
       setStatus("Creating token on-chain...");
       let initialBuyBN: BN | undefined;
       if (doInitialBuy) {
@@ -101,7 +116,7 @@ export default function LaunchPage() {
       }
 
       const quoteMintPubkey = QUOTE_ASSETS[selectedQuote].mint;
-      const { txSig, tokenMint } = await executeCreateToken(walletAdapter, name.trim(), symbol.trim(), uri, initialBuyBN, quoteMintPubkey);
+      const { txSig, tokenMint } = await executeCreateToken(walletAdapter, name.trim(), symbol.trim(), uri, initialBuyBN, quoteMintPubkey, vanityKeypair ?? undefined);
       setSuccessData({ txSig, mint: tokenMint.toBase58() });
       setStep("success");
     } catch (err: any) {

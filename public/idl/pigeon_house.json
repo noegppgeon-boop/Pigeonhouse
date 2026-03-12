@@ -510,7 +510,9 @@
         {
           "name": "caller",
           "docs": [
-            "Anyone can call — permissionless cranker. Pays Meteora pool rent."
+            "Anyone can call — permissionless cranker.",
+            "Pays pool creation fee (0.15 SOL) + rent for CPMM accounts.",
+            "Also acts as CPMM \"creator\" (holds tokens temporarily)."
           ],
           "writable": true,
           "signer": true
@@ -632,12 +634,16 @@
           "writable": true
         },
         {
+          "name": "quote_mint",
+          "writable": true
+        },
+        {
           "name": "pigeon_mint",
           "writable": true,
           "address": "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"
         },
         {
-          "name": "bonding_curve_pigeon_vault",
+          "name": "bonding_curve_quote_vault",
           "writable": true
         },
         {
@@ -649,66 +655,87 @@
           "writable": true
         },
         {
-          "name": "caller_token_ata",
+          "name": "creator_reward_ata",
           "writable": true
         },
         {
-          "name": "caller_pigeon_ata",
+          "name": "caller_token_0",
           "writable": true
         },
         {
-          "name": "creator_pigeon_ata",
+          "name": "caller_token_1",
           "writable": true
         },
         {
-          "name": "position_nft_mint",
+          "name": "cpmm_program",
+          "address": "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+        },
+        {
+          "name": "amm_config",
+          "address": "61GwTFRpjM3emvpnNoMT54oKnmjrQF6m1UQxmZRZQFRZ"
+        },
+        {
+          "name": "cpmm_authority"
+        },
+        {
+          "name": "pool_state",
+          "writable": true
+        },
+        {
+          "name": "token_0_mint"
+        },
+        {
+          "name": "token_1_mint"
+        },
+        {
+          "name": "lp_mint",
+          "writable": true
+        },
+        {
+          "name": "caller_lp_token",
+          "writable": true
+        },
+        {
+          "name": "token_0_vault",
+          "writable": true
+        },
+        {
+          "name": "token_1_vault",
+          "writable": true
+        },
+        {
+          "name": "create_pool_fee",
           "writable": true,
-          "signer": true
+          "address": "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
         },
         {
-          "name": "position_nft_account",
+          "name": "observation_state",
           "writable": true
-        },
-        {
-          "name": "meteora_config",
-          "address": "8CNy9goNQNLM4wtgRw528tUQGMKD3vSuFRZY2gLGLLvF"
-        },
-        {
-          "name": "meteora_pool_authority"
-        },
-        {
-          "name": "meteora_pool",
-          "writable": true
-        },
-        {
-          "name": "meteora_position",
-          "writable": true
-        },
-        {
-          "name": "meteora_token_vault",
-          "writable": true
-        },
-        {
-          "name": "meteora_pigeon_vault",
-          "writable": true
-        },
-        {
-          "name": "meteora_event_authority"
-        },
-        {
-          "name": "meteora_program"
         },
         {
           "name": "dead_wallet",
           "address": "1nc1nerator11111111111111111111111111111111"
         },
         {
-          "name": "dead_wallet_position_nft_ata",
+          "name": "dead_wallet_lp_ata",
           "writable": true
         },
         {
           "name": "token_program",
           "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "spl_token_program",
+          "docs": [
+            "SPL Token program (for LP mint — CPMM uses SPL Token for LP)"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_0_program"
+        },
+        {
+          "name": "token_1_program"
         },
         {
           "name": "associated_token_program",
@@ -717,6 +744,10 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []
@@ -2261,6 +2292,11 @@
       "code": 6017,
       "name": "InvalidQuoteKind",
       "msg": "Invalid quote asset kind"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidTokenOrder",
+      "msg": "Token ordering invalid: token_0 must be < token_1"
     }
   ],
   "types": [

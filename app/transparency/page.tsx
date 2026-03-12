@@ -154,7 +154,7 @@ export default function TransparencyPage() {
                 { label: "PigeonHouse", value: "BV1RxkAa...NoL", full: "BV1RxkAaD5DjXMsnofkVikFUUYdrDg1v8YgsQ3iyDNoL", type: "program" },
                 { label: "Hook Program", value: "49NjaVFx...ugi", full: "49NjaVFxXUhWg59g4bEDtcNQxsArFz9MnyeQGPxUDugi", type: "program" },
                 { label: "PIGEON Token", value: "4fSWEw2w...pump", full: "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump", type: "token" },
-                { label: "Meteora DAMM v2", value: "cpamdpZC...sGG", full: "cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG", type: "program" },
+                { label: "Raydium CPMM", value: "CPMMoo8L...KP1C", full: "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C", type: "program" },
                 { label: "Treasury", value: "7EhCAjUG...dEKi", full: "7EhCAjUGGE8WNLHnJ7gkfxQa3k4tBTLJAKsg459dEKi", type: "account" },
               ].map((item, i) => (
                 <a key={i} href={`https://solscan.io/${item.type === "token" ? "token" : "account"}/${item.full}`}
@@ -225,7 +225,7 @@ export default function TransparencyPage() {
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-bronze font-mono font-bold">3.</span>
-                <span>Fees withdrawn → swapped to PIGEON → burned. One atomic transaction.</span>
+                <span>PIGEON fees burned directly. SOL/SKR fees collected into strategic reserves.</span>
               </div>
             </div>
           </div>
@@ -312,13 +312,13 @@ export default function TransparencyPage() {
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[12px] font-semibold text-txt-secondary flex items-center gap-2">
-                <Flame className="h-3.5 w-3.5 text-crimson" />
-                Burn Accrual Vaults
+                <Shield className="h-3.5 w-3.5 text-teal" />
+                Legacy Accrual Vaults
               </h3>
-              <span className="text-[10px] font-mono text-txt-muted">SWEEP → BURN</span>
+              <span className="text-[10px] font-mono text-txt-muted">LEGACY</span>
             </div>
             <p className="text-[11px] text-txt-muted mb-3">
-              Non-PIGEON burn fees accrue here. A cranker periodically sweeps, swaps to PIGEON, and burns.
+              Historical fee accruals from earlier trades. New SOL/SKR trade fees now flow directly to Strategic Reserves.
             </p>
 
             <div className="space-y-2">
@@ -342,10 +342,10 @@ export default function TransparencyPage() {
           <div className="card p-4">
             <h4 className="text-[11px] font-semibold text-txt-secondary uppercase tracking-wider mb-2">How It Works</h4>
             <div className="space-y-2 text-[11px] text-txt-muted">
-              <p>When tokens are launched with <span className="font-mono text-purple-400">SOL</span> or <span className="font-mono text-teal-400">SKR</span> as quote asset, trade fees split into lanes:</p>
-              <p>• <span className="font-mono text-crimson">Burn lane</span> — accrues to BurnAccrualVault, periodically swept → swapped to PIGEON → burned</p>
-              <p>• <span className="font-mono text-purple-400">Reserve lane</span> — accrues to StrategicReserveVault for ecosystem use</p>
-              <p>• <span className="font-mono text-txt-secondary">Treasury lane</span> — sent to protocol treasury</p>
+              <p>When tokens are launched with <span className="font-mono text-purple-400">SOL</span> or <span className="font-mono text-teal-400">SKR</span> as quote asset, trade fees split into two lanes:</p>
+              <p>• <span className="font-mono text-teal">Strategic Reserve</span> (1.5%) — accrues to StrategicReserveVault, building ecosystem reserves in native assets</p>
+              <p>• <span className="font-mono text-txt-secondary">Treasury</span> (0.5%) — sent to protocol treasury</p>
+              <p>For <span className="font-mono text-crimson">PIGEON</span>-quoted tokens, 1.5% of fees are burned instantly on every trade. 🔥</p>
               <p>All vaults are on-chain PDAs — verifiable, transparent, immutable.</p>
             </div>
           </div>

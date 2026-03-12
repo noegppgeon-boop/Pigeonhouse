@@ -62,7 +62,7 @@ export default function StatsPage() {
           <div className="space-y-3.5">
             <DistBar label="Pre-Graduation" sublabel="Active on bonding curve" count={activeTokens} total={totalTokens} color="bg-crimson" />
             <DistBar label="Heating" sublabel="Approaching threshold" count={graduatingSoon} total={totalTokens} color="bg-bronze" />
-            <DistBar label="Ascended" sublabel="Graduated to Meteora" count={graduatedTokens} total={totalTokens} color="bg-teal" />
+            <DistBar label="Ascended" sublabel="Graduated to Raydium CPMM" count={graduatedTokens} total={totalTokens} color="bg-teal" />
           </div>
 
           {totalTokens === 0 && (
@@ -86,7 +86,7 @@ export default function StatsPage() {
             <EconRow label="Referral" value="0.5% → referrer (or extra burn)" />
             <div className="h-px my-1" style={{ background: "#3A3632" }} />
             <EconRow label="Hook Fee (Post-Grad)" value="0.25% TransferFee" tag="HOOK" tagColor="text-bronze" />
-            <EconRow label="Sweep → Burn" value="100% of accrued → PIGEON burn" tag="SEALED" tagColor="text-crimson" />
+            <EconRow label="SOL/SKR Fees" value="1.5% strategic reserve + 0.5% treasury" tag="RESERVE" tagColor="text-teal" />
             <EconRow label="LP Lock" value="Dead wallet — forever" tag="PERMANENT" tagColor="text-teal" />
             <EconRow label="Creator Reward" value="0.5% at graduation → creator" />
           </div>

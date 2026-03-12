@@ -225,6 +225,24 @@ export default function TokenPage() {
         <MetricCard label="Reserves" value={formatNumber(curve.realPigeonReserves.toNumber() / Math.pow(10, quoteDecimals))} unit={quoteSymbol} icon={Zap} color="text-teal" />
       </div>
 
+      {/* ── Graduated Banner ── */}
+      {isComplete && (
+        <div className="card p-4 bg-teal/5 border-teal/20">
+          <div className="flex items-center gap-2 text-teal text-body-sm font-semibold">
+            <Award className="h-4 w-4" />
+            Ascended — now trading on Raydium CPMM
+          </div>
+          <p className="text-caption text-txt-muted mt-1">
+            Post-graduation trades burn 0.5% {quoteSymbol} instantly via Trade Router 🔥
+          </p>
+          <a href={`https://raydium.io/swap/?inputMint=${curve.quoteMint?.toBase58() ?? "4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"}&outputMint=${mintAddress}`}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-caption text-teal mt-2 hover:underline">
+            Trade on Raydium <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+
       {/* ── Graduation Progress ── */}
       <div className="card p-4">
         <div className="flex items-center justify-between mb-2">
@@ -255,7 +273,14 @@ export default function TokenPage() {
 
         {/* ── LEFT: Chart + Trades + Info ── */}
         <div className="lg:col-span-3 space-y-5">
-          <ChartArea mint={mintAddress} />
+          <ChartArea
+            mint={mintAddress}
+            progress={progress}
+            isComplete={isComplete}
+            graduationThreshold={config.graduationPigeonAmount.toNumber() / 1e6}
+            currentReserves={curve.realPigeonReserves.toNumber() / 1e6}
+            quoteSymbol={quoteSymbol}
+          />
           <RecentTrades mint={mintAddress} />
 
           {/* Token Info */}

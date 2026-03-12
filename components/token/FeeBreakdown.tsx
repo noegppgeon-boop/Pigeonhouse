@@ -14,8 +14,8 @@ interface FeeBreakdownProps {
 
 const DEFAULT_FEES: Record<QuoteAssetKey, { burn: number; reserve: number; treasury: number }> = {
   pigeon: { burn: 150, reserve: 0, treasury: 50 },
-  sol: { burn: 100, reserve: 50, treasury: 50 },
-  skr: { burn: 100, reserve: 50, treasury: 50 },
+  sol: { burn: 0, reserve: 150, treasury: 50 },
+  skr: { burn: 0, reserve: 150, treasury: 50 },
 };
 
 export function FeeBreakdown({
@@ -31,9 +31,11 @@ export function FeeBreakdown({
   const treasury = treasuryBps ?? defaults.treasury;
 
   const lanes = [
-    { icon: <Flame className="w-3.5 h-3.5" />, label: "Burn", bps: burn, color: "text-crimson" },
+    ...(burn > 0
+      ? [{ icon: <Flame className="w-3.5 h-3.5" />, label: "Burn", bps: burn, color: "text-crimson" }]
+      : []),
     ...(reserve > 0
-      ? [{ icon: <Shield className="w-3.5 h-3.5" />, label: "Reserve", bps: reserve, color: "text-teal" }]
+      ? [{ icon: <Shield className="w-3.5 h-3.5" />, label: "Strategic Reserve", bps: reserve, color: "text-teal" }]
       : []),
     { icon: <Building2 className="w-3.5 h-3.5" />, label: "Treasury", bps: treasury, color: "text-bronze" },
   ];

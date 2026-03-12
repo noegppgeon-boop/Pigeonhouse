@@ -410,7 +410,8 @@ export async function executeCreateToken(
   symbol: string,
   uri: string,
   initialBuyPigeon?: BN,
-  quoteMint?: PublicKey
+  quoteMint?: PublicKey,
+  mintKeypair?: Keypair
 ): Promise<{ txSig: string; tokenMint: PublicKey }> {
   const program = await getProgram(wallet);
   const connection = getConnection();
@@ -421,8 +422,8 @@ export async function executeCreateToken(
   const quoteTokenProgram = quoteAsset?.tokenProgram ?? TOKEN_2022_PROGRAM_ID;
   const quoteConfigPDA = getQuoteAssetConfigPDA(effectiveQuoteMint);
 
-  // Generate new token mint keypair
-  const tokenMint = Keypair.generate();
+  // Use provided vanity keypair or generate random
+  const tokenMint = mintKeypair ?? Keypair.generate();
   const bondingCurve = getBondingCurvePDA(tokenMint.publicKey);
   const feeVault = getFeeVaultPDA();
   const metadataPDA = getMetadataPDA(tokenMint.publicKey);
@@ -431,8 +432,11 @@ export async function executeCreateToken(
   // getMintLen([TransferFeeConfig]) = 278
   // Base(82) + padding(83) + AccountType(1) + TransferFeeConfig(4+108) = 278
   // TransferHook removed — Meteora DAMM v2 permissionless without it
-  const mintSpace = 278; // Token-2022 mint + TransferFeeConfig (no TransferHook)
-  const mintRent = await connection.getMinimumBalanceForRentExemption(mintSpace);
+  // Token-2022 mint with MetadataPointer = 234 bytes
+  // TokenMetadata (name/symbol/uri) is added via realloc during initialize — needs extra lamports
+  const mintSpace = 234;
+  const metadataBudget = 500; // buffer for name + symbol + uri realloc by Token-2022
+  const mintRent = await connection.getMinimumBalanceForRentExemption(mintSpace + metadataBudget);
   const createMintIx = SystemProgram.createAccount({
     fromPubkey: wallet.publicKey,
     newAccountPubkey: tokenMint.publicKey,
@@ -455,8 +459,8 @@ export async function executeCreateToken(
       bondingCurveTokenVault: getATA(bondingCurve, tokenMint.publicKey),
       quoteMint: effectiveQuoteMint,
       pigeonMint: PIGEON_MINT,
-      metadata: SystemProgram.programId,
-      metadataProgram: SystemProgram.programId,
+      metadata: SystemProgram.programId,      // unused — metadata now embedded via Token-2022 extension
+      metadataProgram: SystemProgram.programId, // unused — Token-2022 native metadata, no Metaplex
       creatorQuoteAta: getATA(wallet.publicKey, effectiveQuoteMint, quoteTokenProgram),
       creatorTokenAta: getATA(wallet.publicKey, tokenMint.publicKey),
       feeVaultPigeonAta: getATA(feeVault, PIGEON_MINT),
