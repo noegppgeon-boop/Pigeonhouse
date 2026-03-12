@@ -382,7 +382,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
           {(payWithSol ? [0.05, 0.1, 0.5, 1] : [10, 50, 100, 500]).map((val) => (
             <button key={val} onClick={() => { setAmount(String(val)); setError(null); }}
               className="flex-1 rounded-lg bg-bg-elevated py-1.5 text-caption font-mono text-txt-muted hover:text-teal hover:bg-teal/8 border border-transparent hover:border-teal/20 transition-all">
-              {payWithSol ? `${val} ◎` : val}
+              {payWithSol ? <><span>{val}</span> <img src="/tokens/sol.png" alt="SOL" className="w-3.5 h-3.5 rounded-full inline" /></> : val}
             </button>
           ))}
         </div>
@@ -468,7 +468,7 @@ export default function TradePanel({ mintAddress, curve, config, onSuccess, refe
         )}
         {payWithSol && tab === "buy" && jupQuote && !jupQuote.error && amountNum > 0 && (
           <div className="text-micro text-txt-muted mt-1.5">
-            ◎ {amountNum} SOL → ~{(Number(jupQuote.outAmount) / 10 ** quoteDecimals).toLocaleString()} {quoteSymbol} via Jupiter → Token
+            <img src="/tokens/sol.png" alt="SOL" className="w-3.5 h-3.5 rounded-full inline" /> {amountNum} SOL → ~{(Number(jupQuote.outAmount) / 10 ** quoteDecimals).toLocaleString()} {quoteSymbol} via Jupiter → Token
           </div>
         )}
       </div>

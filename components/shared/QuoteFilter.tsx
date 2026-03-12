@@ -7,11 +7,11 @@ interface QuoteFilterProps {
   onChange: (v: QuoteAssetKey | "all") => void;
 }
 
-const pills: { key: QuoteAssetKey | "all"; label: string; icon?: string }[] = [
+const pills: { key: QuoteAssetKey | "all"; label: string; logo?: string }[] = [
   { key: "all", label: "All" },
-  { key: "pigeon", label: "PIGEON", icon: QUOTE_ASSETS.pigeon.icon },
-  { key: "sol", label: "SOL", icon: QUOTE_ASSETS.sol.icon },
-  { key: "skr", label: "SKR", icon: QUOTE_ASSETS.skr.icon },
+  { key: "pigeon", label: "PIGEON", logo: QUOTE_ASSETS.pigeon.logo },
+  { key: "sol", label: "SOL", logo: QUOTE_ASSETS.sol.logo },
+  { key: "skr", label: "SKR", logo: QUOTE_ASSETS.skr.logo },
 ];
 
 export function QuoteFilter({ value, onChange }: QuoteFilterProps) {
@@ -29,7 +29,7 @@ export function QuoteFilter({ value, onChange }: QuoteFilterProps) {
                 : "bg-bg-elevated text-txt-muted border border-transparent hover:bg-bg-card hover:text-txt-secondary"
             }`}
           >
-            {pill.icon && <span>{pill.icon}</span>}
+            {pill.logo && <img src={pill.logo} alt={pill.label} className="w-4 h-4 rounded-full" />}
             <span>{pill.label}</span>
           </button>
         );

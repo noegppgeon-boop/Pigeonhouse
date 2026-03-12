@@ -275,16 +275,16 @@ export default function TransparencyPage() {
 
             <div className="space-y-3">
               {([
-                { key: "sol", icon: "◎", label: "SOL Reserve", color: "purple", decimals: 9, feePct: "0.5%" },
-                { key: "skr", icon: "🔮", label: "SKR Reserve", color: "teal", decimals: 6, feePct: "0.5%" },
-              ] as const).map(({ key, icon, label, color, decimals, feePct }) => {
+                { key: "sol", logo: "/tokens/sol.png", label: "SOL Reserve", color: "purple", decimals: 9, feePct: "0.5%" },
+                { key: "skr", logo: "/tokens/skr.png", label: "SKR Reserve", color: "teal", decimals: 6, feePct: "0.5%" },
+              ] as const).map(({ key, logo, label, color, decimals, feePct }) => {
                 const rv = reserveData?.reserves?.[key];
                 const fmt = (v: string | undefined) => v ? (parseInt(v) / 10 ** decimals).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "0";
                 return (
                   <div key={key} className={`rounded-lg bg-${color}-500/5 border border-${color}-500/15 p-4`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-[12px] font-semibold text-${color}-400 flex items-center gap-1.5`}>
-                        <span>{icon}</span> {label}
+                        <img src={logo} alt={label} className="w-4 h-4 rounded-full" /> {label}
                       </span>
                       <span className="text-[10px] text-txt-muted font-mono">{feePct} of {key.toUpperCase()} trades</span>
                     </div>
@@ -323,14 +323,14 @@ export default function TransparencyPage() {
 
             <div className="space-y-2">
               {([
-                { key: "sol", icon: "◎", symbol: "SOL", decimals: 9 },
-                { key: "skr", icon: "🔮", symbol: "SKR", decimals: 6 },
-              ] as const).map(({ key, icon, symbol, decimals }) => {
+                { key: "sol", logo: "/tokens/sol.png", symbol: "SOL", decimals: 9 },
+                { key: "skr", logo: "/tokens/skr.png", symbol: "SKR", decimals: 6 },
+              ] as const).map(({ key, logo, symbol, decimals }) => {
                 const ba = reserveData?.burnAccruals?.[key];
                 const val = ba ? (parseInt(ba.balance) / 10 ** decimals).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—";
                 return (
                   <div key={key} className="flex items-center justify-between rounded-lg bg-bg-elevated p-3">
-                    <span className="text-[11px] text-txt-muted">{icon} {symbol} Burn Accrual</span>
+                    <span className="text-[11px] text-txt-muted flex items-center gap-1.5"><img src={logo} alt={symbol} className="w-3.5 h-3.5 rounded-full" /> {symbol} Burn Accrual</span>
                     <span className="text-[12px] font-mono text-txt">{val} {symbol}</span>
                   </div>
                 );
