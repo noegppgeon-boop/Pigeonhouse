@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-// Cache prices for 30s
 let cache: { data: any; ts: number } | null = null;
 const CACHE_TTL = 30_000;
 
@@ -17,59 +16,49 @@ export async function GET() {
   }
 
   try {
-    // Fetch PIGEON and SOL USD prices from DexScreener
-    const [pigeonRes, solRes] = await Promise.all([
-      fetch(`https://api.dexscreener.com/latest/dex/tokens/${PIGEON_MINT}`),
-      fetch(`https://api.dexscreener.com/latest/dex/tokens/${SOL_MINT}`),
-    ]);
-
     let pigeonUsd = 0;
     let solUsd = 0;
     let skrUsd = 0;
 
+    // Fetch PIGEON pairs — gives us PIGEON/USD and derived SOL/USD
+    const pigeonRes = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${PIGEON_MINT}`
+    );
+
     if (pigeonRes.ok) {
       const d = await pigeonRes.json();
-      const pair = d.pairs?.find((p: any) => p.quoteToken?.symbol === "SOL" || p.quoteToken?.address === SOL_MINT);
-      if (pair?.priceUsd) pigeonUsd = parseFloat(pair.priceUsd);
-    }
-
-    if (solRes.ok) {
-      const d = await solRes.json();
-      // SOL/USDC pair
-      const pair = d.pairs?.find((p: any) =>
-        (p.baseToken?.address === SOL_MINT || p.quoteToken?.address === SOL_MINT) &&
-        p.priceUsd
+      // Find a SOL-quoted pair with USD price
+      const solPair = d.pairs?.find(
+        (p: any) =>
+          p.quoteToken?.symbol === "SOL" &&
+          p.priceUsd &&
+          p.priceNative &&
+          parseFloat(p.priceNative) > 0
       );
-      if (pair) {
-        solUsd = pair.baseToken?.address === SOL_MINT
-          ? parseFloat(pair.priceUsd)
-          : 1 / parseFloat(pair.priceUsd);
+      if (solPair) {
+        pigeonUsd = parseFloat(solPair.priceUsd);
+        // Derive SOL price: PIGEON_USD / PIGEON_SOL = SOL_USD
+        solUsd = pigeonUsd / parseFloat(solPair.priceNative);
+      } else {
+        // Fallback: any pair with priceUsd
+        const anyPair = d.pairs?.find((p: any) => p.priceUsd);
+        if (anyPair) pigeonUsd = parseFloat(anyPair.priceUsd);
       }
     }
 
-    // Fallback: derive SOL price from PIGEON pair if needed
-    if (solUsd === 0 && pigeonRes.ok) {
-      const d = await pigeonRes.json().catch(() => null);
-      const pair = d?.pairs?.find((p: any) => p.priceNative && p.priceUsd);
-      if (pair) {
-        solUsd = parseFloat(pair.priceUsd) / parseFloat(pair.priceNative);
-      }
-    }
-
-    // SKR — try DexScreener
+    // SKR price
     try {
-      const skrRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`);
+      const skrRes = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${SKR_MINT}`
+      );
       if (skrRes.ok) {
         const d = await skrRes.json();
-        if (d.pairs?.[0]?.priceUsd) skrUsd = parseFloat(d.pairs[0].priceUsd);
+        const pair = d.pairs?.find((p: any) => p.priceUsd);
+        if (pair) skrUsd = parseFloat(pair.priceUsd);
       }
     } catch {}
 
     const result = {
-      [PIGEON_MINT]: { usd: pigeonUsd },
-      [SOL_MINT]: { usd: solUsd },
-      [SKR_MINT]: { usd: skrUsd },
-      // Convenience aliases
       pigeon: pigeonUsd,
       sol: solUsd,
       skr: skrUsd,
@@ -79,6 +68,9 @@ export async function GET() {
     cache = { data: result, ts: now };
     return NextResponse.json(result);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message, pigeon: 0, sol: 0, skr: 0 }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message, pigeon: 0, sol: 0, skr: 0 },
+      { status: 500 }
+    );
   }
 }
