@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
 
 const POLY_API = "https://gamma-api.polymarket.com";
-const KALSHI_API = "https://api.elections.kalshi.com/trade-api/v2";
+
+// Sports/esports noise filter — skip these unless they're truly massive
+const SPORTS_KEYWORDS = [
+  "vs.", "spread:", "o/u ", "wins by over", "points scored",
+  "win on 2026", "win on 2025", "BO3", "BO5",
+  // teams
+  "knicks", "pacers", "suns", "raptors", "cavaliers", "mavericks",
+  "warriors", "rockets", "pistons", "grizzlies", "pelicans", "oilers",
+  "kings", "islanders", "timberwolves", "celtics", "lakers", "nets",
+];
+
+function isSportsNoise(title: string): boolean {
+  const lower = title.toLowerCase();
+  return SPORTS_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 interface Signal {
   id: string;
   source: "polymarket" | "kalshi";
-  type: "whale_entry" | "volume_spike" | "new_market_heat" | "top_mover";
+  type: "smart_money" | "volume_spike" | "new_gem" | "high_conviction" | "contrarian" | "dormant_revival";
   title: string;
   description: string;
   volume24h: number;
@@ -14,59 +28,55 @@ interface Signal {
   liquidity: number;
   yesPrice?: number;
   noPrice?: number;
-  priceChange24h?: number;
+  priceChange?: string;
   url: string;
+  slug: string;
+  tags: string[];
   detectedAt: string;
 }
 
-async function getPolymarketSignals(): Promise<Signal[]> {
+function categorize(title: string): string[] {
+  const lower = title.toLowerCase();
+  const tags: string[] = [];
+  if (lower.includes("fed") || lower.includes("interest rate") || lower.includes("inflation") || lower.includes("gdp") || lower.includes("recession")) tags.push("macro");
+  if (lower.includes("iran") || lower.includes("russia") || lower.includes("ukraine") || lower.includes("china") || lower.includes("ceasefire") || lower.includes("strike") || lower.includes("war") || lower.includes("hormuz")) tags.push("geopolitics");
+  if (lower.includes("president") || lower.includes("election") || lower.includes("democrat") || lower.includes("republican") || lower.includes("trump") || lower.includes("senate") || lower.includes("congress") || lower.includes("governor") || lower.includes("pope")) tags.push("politics");
+  if (lower.includes("bitcoin") || lower.includes("ethereum") || lower.includes("crypto") || lower.includes("solana") || lower.includes("token")) tags.push("crypto");
+  if (lower.includes("elon") || lower.includes("musk") || lower.includes("tweet")) tags.push("musk");
+  if (lower.includes("ai") || lower.includes("openai") || lower.includes("google") || lower.includes("tesla") || lower.includes("apple") || lower.includes("nvidia")) tags.push("tech");
+  if (lower.includes("regime") || lower.includes("coup") || lower.includes("sanctions")) tags.push("blackswan");
+  if (tags.length === 0) tags.push("other");
+  return tags;
+}
+
+async function fetchPolymarketSignals(): Promise<Signal[]> {
   const signals: Signal[] = [];
 
   try {
-    // 1. Top volume (whale activity indicator)
-    const topVolRes = await fetch(
-      `${POLY_API}/markets?limit=30&active=true&closed=false&order=volume24hr&ascending=false`,
-      { next: { revalidate: 120 } }
+    // Fetch top 100 markets by 24h volume
+    const res = await fetch(
+      `${POLY_API}/markets?limit=100&active=true&closed=false&order=volume24hr&ascending=false`,
+      { next: { revalidate: 60 } } // Cache 1 min
     );
-    const topVol = await topVolRes.json();
+    const markets = await res.json();
 
-    for (const m of topVol.slice(0, 30)) {
+    const now = Date.now();
+
+    for (const m of markets) {
       const vol24h = parseFloat(m.volume24hr || "0");
       const volTotal = parseFloat(m.volumeClob || "0");
       const liquidity = parseFloat(m.liquidityClob || "0");
+      const question = m.question || "";
 
       if (vol24h < 5000) continue;
 
-      // Volume spike: 24h volume > 20% of total volume = unusual activity
-      const isSpike = volTotal > 0 && vol24h / volTotal > 0.15;
-      // Whale entry: high volume + high liquidity ratio
-      const isWhale = vol24h > 500000;
-      // New market heat: created recently with significant volume
-      const startDate = new Date(m.startDate || 0);
-      const ageHours = (Date.now() - startDate.getTime()) / (1000 * 60 * 60);
-      const isNewHeat = ageHours < 48 && vol24h > 50000;
+      // Filter sports noise (allow if >$5M volume — truly massive)
+      if (isSportsNoise(question) && vol24h < 5_000_000) continue;
 
-      let type: Signal["type"] = "top_mover";
-      let description = "";
-
-      if (isNewHeat) {
-        type = "new_market_heat";
-        description = `New market (${Math.round(ageHours)}h old) with $${(vol24h / 1000).toFixed(0)}K volume in 24h`;
-      } else if (isSpike) {
-        type = "volume_spike";
-        description = `Volume spike: $${(vol24h / 1000).toFixed(0)}K in 24h (${((vol24h / volTotal) * 100).toFixed(0)}% of all-time volume)`;
-      } else if (isWhale) {
-        type = "whale_entry";
-        description = `Heavy activity: $${(vol24h / 1000000).toFixed(1)}M traded in 24h`;
-      } else {
-        description = `$${(vol24h / 1000).toFixed(0)}K volume in 24h`;
-      }
-
-      // Parse outcome prices from tokens
+      // Parse prices
       let yesPrice: number | undefined;
       let noPrice: number | undefined;
       try {
-        const tokens = JSON.parse(m.clobTokenIds || "[]");
         const prices = JSON.parse(m.outcomePrices || "[]");
         if (prices.length >= 2) {
           yesPrice = parseFloat(prices[0]);
@@ -74,13 +84,67 @@ async function getPolymarketSignals(): Promise<Signal[]> {
         }
       } catch {}
 
+      // Age
+      const startDate = new Date(m.startDate || 0);
+      const ageHours = (now - startDate.getTime()) / (1000 * 60 * 60);
+
+      // Volume ratio (24h vs all-time)
+      const volRatio = volTotal > 0 ? vol24h / volTotal : 0;
+
+      // Determine signal type
+      let type: Signal["type"] = "smart_money";
+      let description = "";
+
+      // 1. CONTRARIAN: Big volume on extreme underdog (<10% or >90%) but NOT settled
+      if (yesPrice !== undefined && vol24h > 100_000) {
+        const isExtreme = yesPrice < 0.10 || yesPrice > 0.90;
+        const isContrarian = (yesPrice < 0.15 && yesPrice > 0.02) || (yesPrice > 0.85 && yesPrice < 0.98);
+        if (isContrarian && volRatio > 0.1) {
+          type = "contrarian";
+          const side = yesPrice < 0.5 ? "YES" : "NO";
+          const odds = yesPrice < 0.5 ? yesPrice : (1 - yesPrice);
+          description = `${side} side getting action at ${(odds * 100).toFixed(0)}¢ — smart money or degen? $${(vol24h / 1000).toFixed(0)}K in 24h`;
+        } else if (isExtreme && !isContrarian) {
+          type = "high_conviction";
+          description = `Market near-settled at ${(yesPrice * 100).toFixed(0)}¢ YES — $${(vol24h / 1000).toFixed(0)}K still flowing`;
+        }
+      }
+
+      // 2. NEW GEM: <72h old with significant volume
+      if (ageHours < 72 && vol24h > 50_000 && type === "smart_money") {
+        type = "new_gem";
+        description = `${Math.round(ageHours)}h old, already $${(vol24h / 1000).toFixed(0)}K volume — early mover opportunity`;
+      }
+
+      // 3. DORMANT REVIVAL: low previous activity, sudden 24h spike
+      if (volRatio > 0.30 && volTotal > 50_000 && ageHours > 168 && type === "smart_money") {
+        type = "dormant_revival";
+        description = `Dormant market woke up — ${(volRatio * 100).toFixed(0)}% of all-time volume in 24h ($${(vol24h / 1000).toFixed(0)}K)`;
+      }
+
+      // 4. VOLUME SPIKE: >20% of total in 24h
+      if (volRatio > 0.20 && vol24h > 200_000 && type === "smart_money") {
+        type = "volume_spike";
+        description = `${(volRatio * 100).toFixed(0)}% of all-time volume in 24h — something brewing`;
+      }
+
+      // 5. SMART MONEY: high volume, normal pattern
+      if (type === "smart_money") {
+        if (vol24h >= 1_000_000) {
+          description = `$${(vol24h / 1_000_000).toFixed(1)}M in 24h — heavy flow, institutional-level interest`;
+        } else {
+          description = `$${(vol24h / 1000).toFixed(0)}K in 24h — active market`;
+        }
+      }
+
       const slug = m.slug || m.conditionId || "";
+      const tags = categorize(question);
 
       signals.push({
         id: m.conditionId || m.id || String(Math.random()),
         source: "polymarket",
         type,
-        title: m.question || "Unknown",
+        title: question,
         description,
         volume24h: vol24h,
         volumeTotal: volTotal,
@@ -88,6 +152,8 @@ async function getPolymarketSignals(): Promise<Signal[]> {
         yesPrice,
         noPrice,
         url: `https://polymarket.com/event/${slug}`,
+        slug,
+        tags,
         detectedAt: new Date().toISOString(),
       });
     }
@@ -98,76 +164,49 @@ async function getPolymarketSignals(): Promise<Signal[]> {
   return signals;
 }
 
-async function getKalshiSignals(): Promise<Signal[]> {
-  const signals: Signal[] = [];
-
-  try {
-    const res = await fetch(
-      `${KALSHI_API}/markets?limit=50&status=open`,
-      { next: { revalidate: 120 } }
-    );
-    const data = await res.json();
-    const markets = data.markets || [];
-
-    for (const m of markets) {
-      const vol = m.volume || 0;
-      if (vol < 100) continue;
-
-      signals.push({
-        id: m.ticker || String(Math.random()),
-        source: "kalshi",
-        type: vol > 10000 ? "whale_entry" : "top_mover",
-        title: m.title || m.subtitle || "Unknown",
-        description: `Volume: ${vol} contracts`,
-        volume24h: m.volume_24h || 0,
-        volumeTotal: vol,
-        liquidity: 0,
-        yesPrice: m.yes_ask ? m.yes_ask / 100 : undefined,
-        noPrice: m.no_ask ? m.no_ask / 100 : undefined,
-        url: `https://kalshi.com/markets/${m.ticker}`,
-        detectedAt: new Date().toISOString(),
-      });
-    }
-  } catch (err) {
-    console.error("Kalshi fetch error:", err);
-  }
-
-  return signals;
-}
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const source = searchParams.get("source"); // polymarket | kalshi | all
-  const type = searchParams.get("type"); // whale_entry | volume_spike | new_market_heat | top_mover
-  const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
+  const type = searchParams.get("type");
+  const tag = searchParams.get("tag");
+  const limit = Math.min(parseInt(searchParams.get("limit") || "30"), 100);
+  const minVol = parseFloat(searchParams.get("minVol") || "0");
 
-  let signals: Signal[] = [];
+  let signals = await fetchPolymarketSignals();
 
-  if (!source || source === "all" || source === "polymarket") {
-    signals.push(...(await getPolymarketSignals()));
-  }
-  if (!source || source === "all" || source === "kalshi") {
-    signals.push(...(await getKalshiSignals()));
-  }
-
-  // Filter by type
-  if (type) {
+  // Filters
+  if (type && type !== "all") {
     signals = signals.filter((s) => s.type === type);
   }
+  if (tag && tag !== "all") {
+    signals = signals.filter((s) => s.tags.includes(tag));
+  }
+  if (minVol > 0) {
+    signals = signals.filter((s) => s.volume24h >= minVol);
+  }
 
-  // Sort by volume24h desc
-  signals.sort((a, b) => b.volume24h - a.volume24h);
+  // Sort: gems first (contrarian > new_gem > dormant_revival > volume_spike > smart_money), then by volume
+  const typePriority: Record<string, number> = {
+    contrarian: 0, new_gem: 1, dormant_revival: 2, volume_spike: 3, high_conviction: 4, smart_money: 5,
+  };
+  signals.sort((a, b) => {
+    const pa = typePriority[a.type] ?? 99;
+    const pb = typePriority[b.type] ?? 99;
+    if (pa !== pb) return pa - pb;
+    return b.volume24h - a.volume24h;
+  });
 
-  // Limit
   signals = signals.slice(0, limit);
 
-  // Stats
   const stats = {
     totalSignals: signals.length,
-    whaleEntries: signals.filter((s) => s.type === "whale_entry").length,
+    contrarian: signals.filter((s) => s.type === "contrarian").length,
+    newGems: signals.filter((s) => s.type === "new_gem").length,
+    dormantRevival: signals.filter((s) => s.type === "dormant_revival").length,
     volumeSpikes: signals.filter((s) => s.type === "volume_spike").length,
-    newMarketHeat: signals.filter((s) => s.type === "new_market_heat").length,
+    smartMoney: signals.filter((s) => s.type === "smart_money").length,
+    highConviction: signals.filter((s) => s.type === "high_conviction").length,
     totalVolume24h: signals.reduce((acc, s) => acc + s.volume24h, 0),
+    uniqueTags: [...new Set(signals.flatMap((s) => s.tags))],
   };
 
   return NextResponse.json({ signals, stats, updatedAt: new Date().toISOString() });
