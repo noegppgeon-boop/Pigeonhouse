@@ -7,26 +7,30 @@ import { ToastProvider } from "@/components/shared/Toast";
 import CommandModal from "@/components/shared/CommandModal";
 import WalletGate from "@/components/shared/WalletGate";
 import LaunchGate from "@/components/shared/LaunchGate";
+import DisclaimerBanner from "@/components/shared/DisclaimerBanner";
 
 export const metadata: Metadata = {
-  title: "PigeonHouse — Ritual Launch Terminal",
+  title: "PigeonHouse — The Ritual Launch Terminal",
   description:
-    "The deflationary token launchpad on Solana. Every trade burns PIGEON. Inscribe with trust, burn with proof.",
+    "Launch tokens on Solana. Every trade burns PIGEON. Verified on-chain, open source, fair launch. 941pigeon.fun",
   icons: {
-    icon: "/tokens/pigeon.png",
-    apple: "/tokens/pigeon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
-    title: "PigeonHouse — Ritual Launch Terminal",
-    description: "The deflationary token launchpad on Solana. Every trade burns PIGEON. Launch tokens, trade on bonding curves, graduate to Raydium.",
-    url: "https://pigeon-house.vercel.app",
+    title: "PigeonHouse — Launch tokens. Burn PIGEON. 🔥",
+    description: "The deflationary token launchpad on Solana. Bonding curves, auto-graduation to Raydium, every trade burns PIGEON. Verified build, open source.",
+    url: "https://941pigeon.fun",
     siteName: "PigeonHouse",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "PigeonHouse — Ritual Launch Terminal",
+        alt: "PigeonHouse — The Ritual Launch Terminal",
       },
     ],
     locale: "en_US",
@@ -34,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PigeonHouse — Ritual Launch Terminal",
-    description: "The deflationary token launchpad on Solana. Every trade burns PIGEON 🔥",
+    title: "PigeonHouse — Launch tokens. Burn PIGEON. 🔥",
+    description: "The deflationary token launchpad on Solana. Verified build, open source. Every trade burns PIGEON 🔥 941pigeon.fun",
     images: ["/og-image.png"],
     creator: "@941pigeondotfun",
     site: "@941pigeondotfun",
@@ -49,6 +53,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#F5F0E8" />
+      </head>
       <body className="min-h-screen bg-bg text-txt">
         <WalletProvider>
           <ToastProvider>
@@ -78,6 +86,9 @@ export default function RootLayout({
 
               {/* Mobile bottom nav */}
               <BottomNav />
+
+              {/* Risk disclaimer — shown once until accepted */}
+              <DisclaimerBanner />
             </LaunchGate>
           </ToastProvider>
         </WalletProvider>

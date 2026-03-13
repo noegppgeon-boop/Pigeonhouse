@@ -10,7 +10,13 @@ export const dynamic = "force-dynamic";
 
 // Tokens created before graduation threshold fix (2026-03-12)
 // Hidden from board but stats still count
-const HIDDEN_BEFORE_EPOCH = 1773336000; // 2026-03-12T17:20:00Z — hide all test tokens before LOWIQ launch
+const HIDDEN_BEFORE_EPOCH = 1773336100; // Show only LOWIQ (created 1773336129) and later real tokens
+
+// Explicit blocklist — test tokens created after LOWIQ that should be hidden
+const HIDDEN_MINTS = new Set([
+  "A3JaQrE8GX2KNop5io5i9mHiWdn6dfMsoUKi7pXLvQsE", // VTEST
+  "8H6Gi5PysPanBHJ3tyQDU3TMghjbiZqp8AYRyaifRKxB", // VLAUNCH
+]);
 
 // Old BondingCurve layout (pre-multi-quote): no quote_mint field
 // New BondingCurve layout: has quote_mint (Pubkey, 32 bytes) after creator
@@ -212,7 +218,9 @@ export async function GET(req: Request) {
     const visibleCurves = curves.filter((c: any) => {
       if (!c?.account) return false;
       const ts = parseInt(c.account.createdAt || "0", 10);
-      return ts >= HIDDEN_BEFORE_EPOCH;
+      if (ts < HIDDEN_BEFORE_EPOCH) return false;
+      if (HIDDEN_MINTS.has(c.account.tokenMint)) return false;
+      return true;
     });
 
     return NextResponse.json({

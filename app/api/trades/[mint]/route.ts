@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PIGEON_HOUSE_PROGRAM_ID, QUOTE_ASSETS } from "@/lib/constants";
+import { tradeStore } from "@/lib/tradeStore";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,15 @@ export async function GET(
 
   const mint = params.mint;
   const now = Date.now();
+
+  // Try webhook store first (real-time, no RPC cost)
+  if (tradeStore.isWebhookAlive) {
+    const webhookTrades = tradeStore.getTrades(mint, 50);
+    if (webhookTrades.length > 0) {
+      const result = { trades: webhookTrades, lastUpdated: now, source: "webhook" };
+      return NextResponse.json(result);
+    }
+  }
 
   const cached = cache.get(mint);
   if (cached && now - cached.ts < CACHE_TTL) {
@@ -124,8 +134,11 @@ export async function GET(
       });
     }
 
-    const result = { trades, lastUpdated: now };
+    const result = { trades, lastUpdated: now, source: "poll" };
     cache.set(mint, { data: result, ts: now });
+
+    // Also feed into trade store for webhook merge
+    tradeStore.addTrades(mint, trades.map(t => ({ ...t, source: "poll" as const })));
 
     return NextResponse.json(result);
   } catch (err: any) {

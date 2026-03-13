@@ -206,7 +206,7 @@ export function Sidebar() {
       </div>
 
       {/* ── 7. Social Links ── */}
-      <div className="px-3 pb-4 flex items-center justify-center gap-4">
+      <div className="px-3 pb-2 flex items-center justify-center gap-4">
         <a href="https://x.com/941pigeondotfun" target="_blank" rel="noopener noreferrer"
           className="text-txt-muted hover:text-txt-secondary transition-colors" title="Twitter/X">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -215,6 +215,13 @@ export function Sidebar() {
           className="text-txt-muted hover:text-txt-secondary transition-colors" title="X Community">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
         </a>
+      </div>
+
+      {/* ── 8. Legal Links ── */}
+      <div className="px-3 pb-4 flex items-center justify-center gap-3">
+        <a href="/terms" className="text-[10px] text-txt-muted hover:text-txt-secondary transition-colors">Terms</a>
+        <span className="text-[10px] text-txt-muted">·</span>
+        <a href="/privacy" className="text-[10px] text-txt-muted hover:text-txt-secondary transition-colors">Privacy</a>
       </div>
     </aside>
   );
