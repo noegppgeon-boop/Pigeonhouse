@@ -2,12 +2,19 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import FireParticles from "./FireParticles";
+
+const PUBLIC_PAGES = ["/predictions", "/terms", "/privacy"];
 
 export default function WalletGate({ children }: { children: React.ReactNode }) {
   const { connected } = useWallet();
   const { setVisible } = useWalletModal();
+  const pathname = usePathname();
+
+  const isPublic = PUBLIC_PAGES.some((p) => pathname.startsWith(p));
+  if (isPublic) return <>{children}</>;
 
   return (
     <>

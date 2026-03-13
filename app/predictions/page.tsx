@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, Zap, Flame, BarChart3, ExternalLink, RefreshCw, Filter } from "lucide-react";
 
 interface Signal {
   id: string;
@@ -31,10 +30,10 @@ interface PredictionData {
 }
 
 const TYPE_CONFIG = {
-  whale_entry: { icon: "🐋", label: "Whale Entry", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-  volume_spike: { icon: "📈", label: "Volume Spike", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20" },
-  new_market_heat: { icon: "🔥", label: "New & Hot", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20" },
-  top_mover: { icon: "⚡", label: "Top Mover", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
+  whale_entry: { icon: "🐋", label: "Whale Entry", color: "text-[var(--teal)]", border: "border-[var(--teal)]/20", bg: "bg-[var(--teal-dim)]" },
+  volume_spike: { icon: "📈", label: "Volume Spike", color: "text-[var(--bronze)]", border: "border-[var(--bronze)]/20", bg: "bg-[var(--bronze-dim)]" },
+  new_market_heat: { icon: "🔥", label: "New & Hot", color: "text-[var(--crimson)]", border: "border-[var(--crimson)]/20", bg: "bg-[var(--crimson-dim)]" },
+  top_mover: { icon: "⚡", label: "Top Mover", color: "text-txt-secondary", border: "border-[var(--border)]", bg: "bg-[var(--bg-card)]" },
 };
 
 function formatUSD(n: number): string {
@@ -43,16 +42,28 @@ function formatUSD(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-function PriceBar({ yes, no }: { yes?: number; no?: number }) {
+function PriceBar({ yes }: { yes?: number }) {
   if (yes === undefined) return null;
-  const yPct = Math.round((yes || 0) * 100);
+  const yPct = Math.round(yes * 100);
   return (
-    <div className="flex items-center gap-2 text-xs mt-2">
-      <span className="text-green-400 font-mono">{yPct}¢ YES</span>
-      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
-        <div className="h-full bg-green-500 rounded-full" style={{ width: `${yPct}%` }} />
+    <div className="flex items-center gap-2 text-[11px] mt-2.5">
+      <span className="font-mono text-[var(--teal)] font-medium">{yPct}¢ YES</span>
+      <div className="flex-1 h-[5px] rounded-full bg-[var(--bg-elevated)] overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{ width: `${yPct}%`, background: yPct > 50 ? "var(--teal)" : "var(--crimson)" }}
+        />
       </div>
-      <span className="text-red-400 font-mono">{100 - yPct}¢ NO</span>
+      <span className="font-mono text-[var(--crimson)] font-medium">{100 - yPct}¢ NO</span>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: string; label: string; value: string | number }) {
+  return (
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-3 text-center">
+      <div className="text-[11px] text-txt-muted mb-0.5">{icon} {label}</div>
+      <div className="font-lore text-lg font-bold text-txt">{value}</div>
     </div>
   );
 }
@@ -81,129 +92,142 @@ export default function PredictionsPage() {
   useEffect(() => { fetchData(); }, [filter, source]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-purple-400" />
-            Prediction Market Signals
-          </h1>
-          <p className="text-white/50 mt-2">
-            Real-time signals from Polymarket & Kalshi — whale entries, volume spikes, and hot new markets
-          </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h1 className="font-lore text-[22px] sm:text-[26px] font-bold text-txt flex items-center gap-2.5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--crimson)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Prediction Signals
+        </h1>
+        <p className="text-[13px] text-txt-secondary mt-1">
+          Real-time signals from Polymarket & Kalshi — whale entries, volume spikes, and hot new markets.
+        </p>
+      </div>
+
+      {/* Stats */}
+      {data?.stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5">
+          <StatCard icon="📊" label="Signals" value={data.stats.totalSignals} />
+          <StatCard icon="🐋" label="Whales" value={data.stats.whaleEntries} />
+          <StatCard icon="📈" label="Spikes" value={data.stats.volumeSpikes} />
+          <StatCard icon="🔥" label="New & Hot" value={data.stats.newMarketHeat} />
+          <StatCard icon="💰" label="24h Volume" value={formatUSD(data.stats.totalVolume24h)} />
         </div>
+      )}
 
-        {/* Stats */}
-        {data?.stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-            {[
-              { label: "Total Signals", value: data.stats.totalSignals, icon: <Zap className="w-4 h-4" /> },
-              { label: "Whale Entries", value: data.stats.whaleEntries, icon: <span>🐋</span> },
-              { label: "Volume Spikes", value: data.stats.volumeSpikes, icon: <TrendingUp className="w-4 h-4" /> },
-              { label: "New & Hot", value: data.stats.newMarketHeat, icon: <Flame className="w-4 h-4" /> },
-              { label: "24h Volume", value: formatUSD(data.stats.totalVolume24h), icon: <BarChart3 className="w-4 h-4" /> },
-            ].map((s, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-                <div className="flex items-center justify-center gap-1 text-white/40 text-xs mb-1">
-                  {s.icon} {s.label}
-                </div>
-                <div className="text-lg font-bold">{s.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <div className="flex items-center gap-1 text-white/40 text-sm">
-            <Filter className="w-4 h-4" /> Filter:
-          </div>
-          {["all", "whale_entry", "volume_spike", "new_market_heat", "top_mover"].map((f) => (
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        {["all", "whale_entry", "volume_spike", "new_market_heat", "top_mover"].map((f) => {
+          const active = filter === f;
+          const cfg = f !== "all" ? TYPE_CONFIG[f as keyof typeof TYPE_CONFIG] : null;
+          return (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                filter === f
-                  ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
-                  : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+              className={`px-3 py-1.5 rounded-lg text-[12px] border transition-all font-medium ${
+                active
+                  ? "bg-[var(--crimson-dim)] border-[var(--crimson)] text-[var(--crimson)]"
+                  : "bg-[var(--bg-card)] border-[var(--border)] text-txt-secondary hover:border-[var(--border-2)]"
               }`}
             >
-              {f === "all" ? "All" : TYPE_CONFIG[f as keyof typeof TYPE_CONFIG]?.label}
+              {f === "all" ? "All" : `${cfg?.icon} ${cfg?.label}`}
+            </button>
+          );
+        })}
+
+        <div className="ml-auto flex items-center gap-2">
+          {["all", "polymarket", "kalshi"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setSource(s)}
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] border transition-all ${
+                source === s
+                  ? "bg-[var(--bg-elevated)] border-[var(--border-2)] text-txt font-medium"
+                  : "bg-[var(--bg-card)] border-[var(--border)] text-txt-muted hover:text-txt-secondary"
+              }`}
+            >
+              {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
-          <div className="ml-auto flex gap-2">
-            {["all", "polymarket", "kalshi"].map((s) => (
-              <button
-                key={s}
-                onClick={() => setSource(s)}
-                className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                  source === s
-                    ? "bg-white/15 border-white/30 text-white"
-                    : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
-                }`}
-              >
-                {s === "all" ? "All Sources" : s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-            <button onClick={fetchData} className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10">
-              <RefreshCw className={`w-4 h-4 text-white/50 ${loading ? "animate-spin" : ""}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Signals */}
-        <div className="space-y-3">
-          {loading && !data ? (
-            <div className="text-center text-white/30 py-20">Loading signals...</div>
-          ) : data?.signals.length === 0 ? (
-            <div className="text-center text-white/30 py-20">No signals found</div>
-          ) : (
-            data?.signals.map((signal) => {
-              const cfg = TYPE_CONFIG[signal.type];
-              return (
-                <a
-                  key={signal.id}
-                  href={signal.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block border rounded-xl p-4 hover:bg-white/5 transition-all ${cfg.bg}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color}`}>
-                          {cfg.icon} {cfg.label}
-                        </span>
-                        <span className="text-xs text-white/30 uppercase">{signal.source}</span>
-                      </div>
-                      <h3 className="font-semibold text-white/90">{signal.title}</h3>
-                      <p className="text-sm text-white/40 mt-1">{signal.description}</p>
-                      <PriceBar yes={signal.yesPrice} no={signal.noPrice} />
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-lg font-bold text-white/80">{formatUSD(signal.volume24h)}</div>
-                      <div className="text-xs text-white/30">24h volume</div>
-                      {signal.liquidity > 0 && (
-                        <div className="text-xs text-white/20 mt-1">{formatUSD(signal.liquidity)} liq</div>
-                      )}
-                      <ExternalLink className="w-3 h-3 text-white/20 mt-2 ml-auto" />
-                    </div>
-                  </div>
-                </a>
-              );
-            })
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="text-center text-white/20 text-xs mt-8">
-          Data from Polymarket & Kalshi public APIs • Refreshed every 2 min • Not financial advice
-          {data?.updatedAt && (
-            <span> • Updated: {new Date(data.updatedAt).toLocaleTimeString()}</span>
-          )}
+          <button
+            onClick={fetchData}
+            className="p-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all"
+            title="Refresh"
+          >
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className={`text-txt-muted ${loading ? "animate-spin" : ""}`}
+            >
+              <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* Signal List */}
+      <div className="space-y-2">
+        {loading && !data ? (
+          <div className="text-center text-txt-muted py-16 text-[13px]">Loading signals...</div>
+        ) : data?.signals.length === 0 ? (
+          <div className="text-center text-txt-muted py-16 text-[13px]">No signals found</div>
+        ) : (
+          data?.signals.map((signal) => {
+            const cfg = TYPE_CONFIG[signal.type];
+            return (
+              <a
+                key={signal.id}
+                href={signal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4 hover:border-[var(--border-2)] hover:bg-[var(--bg-elevated)] transition-all group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.color} ${cfg.border} ${cfg.bg}`}>
+                        {cfg.icon} {cfg.label}
+                      </span>
+                      <span className="text-[10px] text-txt-muted uppercase tracking-wide">{signal.source}</span>
+                    </div>
+                    <h3 className="font-lore text-[14px] font-semibold text-txt leading-snug group-hover:text-[var(--crimson)] transition-colors">
+                      {signal.title}
+                    </h3>
+                    <p className="text-[12px] text-txt-secondary mt-1">{signal.description}</p>
+                    <PriceBar yes={signal.yesPrice} />
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-lore text-[16px] font-bold text-txt">{formatUSD(signal.volume24h)}</div>
+                    <div className="text-[10px] text-txt-muted">24h vol</div>
+                    {signal.liquidity > 0 && (
+                      <div className="text-[10px] text-txt-muted mt-0.5">{formatUSD(signal.liquidity)} liq</div>
+                    )}
+                    <svg
+                      width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      className="text-txt-muted mt-2 ml-auto opacity-0 group-hover:opacity-60 transition-opacity"
+                    >
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            );
+          })
+        )}
+      </div>
+
+      {/* Footer */}
+      <p className="text-center text-[10px] text-txt-muted pt-2">
+        Data from Polymarket & Kalshi public APIs · Refreshed every 2 min · Not financial advice
+        {data?.updatedAt && (
+          <> · {new Date(data.updatedAt).toLocaleTimeString()}</>
+        )}
+      </p>
     </div>
   );
 }
