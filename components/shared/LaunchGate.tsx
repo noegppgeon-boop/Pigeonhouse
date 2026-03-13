@@ -190,9 +190,10 @@ function Trust() {
   );
 }
 
-function isLegalPage() {
+function isExemptPage() {
   if (typeof window === "undefined") return false;
-  return window.location.pathname === "/terms" || window.location.pathname === "/privacy";
+  const p = window.location.pathname;
+  return p === "/terms" || p === "/privacy" || p === "/predictions";
 }
 
 export default function LaunchGate({ children }: { children: React.ReactNode }) {
@@ -228,7 +229,7 @@ export default function LaunchGate({ children }: { children: React.ReactNode }) 
     );
   }
 
-  if (launched || isLegalPage()) return <>{children}</>;
+  if (launched || isExemptPage()) return <>{children}</>;
 
   return (
     <div ref={scrollRef} className="launch-gate-wrapper launch-gate-bg">
