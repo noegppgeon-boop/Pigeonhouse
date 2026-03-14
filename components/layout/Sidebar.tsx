@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Rocket, Trophy, Eye, Search,
   BarChart3, Shield, Wallet, Flame, Zap, Users,
@@ -49,9 +49,9 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   // Sync collapsed state with document for CSS targeting
-  if (typeof document !== "undefined") {
+  useEffect(() => {
     document.documentElement.setAttribute("data-sidebar", collapsed ? "collapsed" : "open");
-  }
+  }, [collapsed]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
