@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame, Image as ImageIcon, Rocket, Check,
@@ -36,9 +37,11 @@ const STEPS: { key: Step; label: string; lore: string; icon: typeof Wallet }[] =
 
 export default function LaunchPage() {
   const { publicKey, connected, wallet, signTransaction, signAllTransactions } = useWallet();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>(connected ? "details" : "connect");
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
+  const [isPrediction, setIsPrediction] = useState(false);
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [twitter, setTwitter] = useState("");
@@ -57,6 +60,21 @@ export default function LaunchPage() {
   const [riskAccepted, setRiskAccepted] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [mintCopied, setMintCopied] = useState(false);
+
+  // Pre-fill from prediction signals
+  useEffect(() => {
+    const predName = searchParams.get("name");
+    const predSymbol = searchParams.get("symbol");
+    const predSource = searchParams.get("source");
+    const isPred = searchParams.get("prediction") === "true";
+    if (predName) setName(predName);
+    if (predSymbol) setSymbol(predSymbol);
+    if (predSource) setWebsite(predSource);
+    if (isPred) {
+      setIsPrediction(true);
+      if (!description) setDescription(`Prediction market token — trade your conviction on Solana. Source: Polymarket`);
+    }
+  }, [searchParams]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

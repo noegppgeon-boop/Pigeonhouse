@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface Signal {
   id: string;
@@ -17,6 +18,8 @@ interface Signal {
   slug: string;
   tags: string[];
   detectedAt: string;
+  // Linked PigeonHouse token (if exists)
+  linkedToken?: { mint: string; symbol: string; name: string };
 }
 
 interface PredictionData {
@@ -61,25 +64,47 @@ function formatUSD(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
+/** Generate a short ticker from a prediction title */
+function generateTicker(title: string): string {
+  const lower = title.toLowerCase();
+  // Known patterns
+  if (lower.includes("fed") && lower.includes("decrease")) return "FEDCUT";
+  if (lower.includes("fed") && lower.includes("increase")) return "FEDHIKE";
+  if (lower.includes("fed") && lower.includes("no change")) return "FEDHOLD";
+  if (lower.includes("iran") && lower.includes("hormuz")) return "HORMUZ";
+  if (lower.includes("iran") && lower.includes("regime")) return "IRANFALL";
+  if (lower.includes("iran") && lower.includes("strike")) return "IRANWAR";
+  if (lower.includes("iran") && lower.includes("ceasefire")) return "IRANPEACE";
+  if (lower.includes("trump")) return "TRUMP28";
+  if (lower.includes("pope")) return "POPE";
+  if (lower.includes("bitcoin") || lower.includes("btc")) return "BTCPUMP";
+  if (lower.includes("recession")) return "RECSN";
+  if (lower.includes("elon") || lower.includes("musk")) return "ELONBET";
+  // Fallback: first 2-3 significant words
+  const words = title.replace(/[^a-zA-Z\s]/g, "").split(/\s+/).filter(w => w.length > 2 && !["will", "the", "and", "for", "from", "after", "before", "this", "that", "with"].includes(w.toLowerCase()));
+  return words.slice(0, 2).map(w => w.slice(0, 4).toUpperCase()).join("") || "PRED";
+}
+
 function PriceBar({ yes }: { yes?: number }) {
   if (yes === undefined) return null;
   const yPct = Math.round(yes * 100);
   const isYesFavored = yPct > 50;
   return (
     <div className="flex items-center gap-2 text-[11px] mt-2.5">
-      <span className={`font-mono font-medium ${isYesFavored ? "text-[var(--teal)]" : "text-txt-muted"}`}>{yPct}¢</span>
+      <span className={`font-mono font-medium ${isYesFavored ? "text-[var(--teal)]" : "text-txt-muted"}`}>{yPct}¢ YES</span>
       <div className="flex-1 h-[5px] rounded-full bg-[var(--bg-elevated)] overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${yPct}%`, background: isYesFavored ? "var(--teal)" : "var(--crimson)" }}
         />
       </div>
-      <span className={`font-mono font-medium ${!isYesFavored ? "text-[var(--crimson)]" : "text-txt-muted"}`}>{100 - yPct}¢</span>
+      <span className={`font-mono font-medium ${!isYesFavored ? "text-[var(--crimson)]" : "text-txt-muted"}`}>{100 - yPct}¢ NO</span>
     </div>
   );
 }
 
 export default function PredictionsPage() {
+  const router = useRouter();
   const [data, setData] = useState<PredictionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -111,6 +136,22 @@ export default function PredictionsPage() {
     const interval = setInterval(fetchData, 60_000);
     return () => clearInterval(interval);
   }, [autoRefresh, fetchData]);
+
+  const handleTradeOnPH = (signal: Signal) => {
+    // Navigate to launch page with pre-filled prediction token details
+    const ticker = generateTicker(signal.title);
+    const name = signal.title.length > 30
+      ? signal.title.slice(0, 28) + "…"
+      : signal.title;
+    const params = new URLSearchParams({
+      name: name,
+      symbol: ticker,
+      prediction: "true",
+      source: signal.url,
+      yesPrice: String(signal.yesPrice || 0.5),
+    });
+    router.push(`/launch?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-5">
@@ -145,8 +186,21 @@ export default function PredictionsPage() {
           </div>
         </div>
         <p className="text-[12px] text-txt-secondary mt-1">
-          Contrarian bets, dormant revivals, new gems — filtered from Polymarket. Sports noise removed. Auto-refreshes every 60s.
+          Spot prediction trends from Polymarket. Launch tokens on PigeonHouse to trade them on Solana — every trade burns PIGEON.
         </p>
+      </div>
+
+      {/* How it works banner */}
+      <div className="bg-[var(--crimson-dim)] border border-[var(--crimson)]/20 rounded-xl p-3.5">
+        <div className="flex items-start gap-3">
+          <span className="text-lg mt-0.5">🔥</span>
+          <div className="text-[12px] text-txt-secondary">
+            <span className="font-semibold text-[var(--crimson)]">How it works:</span>{" "}
+            See a signal → hit <span className="font-medium text-txt">Trade on PigeonHouse</span> → launches a prediction token on a bonding curve → 
+            anyone can buy/sell with their Solana wallet → 2% fee burns PIGEON.
+            <span className="text-txt-muted ml-1">No Polygon wallet needed.</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -218,6 +272,7 @@ export default function PredictionsPage() {
         ) : (
           data?.signals.map((signal) => {
             const cfg = TYPE_CONFIG[signal.type] || TYPE_CONFIG.smart_money;
+            const ticker = generateTicker(signal.title);
             return (
               <div
                 key={signal.id}
@@ -237,6 +292,10 @@ export default function PredictionsPage() {
                           </span>
                         ) : null;
                       })}
+                      <a href={signal.url} target="_blank" rel="noopener noreferrer"
+                        className="text-[9px] text-txt-disabled hover:text-txt-muted transition-colors ml-auto">
+                        Polymarket ↗
+                      </a>
                     </div>
                     <h3 className="font-lore text-[14px] font-semibold text-txt leading-snug">
                       {signal.title}
@@ -250,14 +309,13 @@ export default function PredictionsPage() {
                     {signal.liquidity > 0 && (
                       <div className="text-[10px] text-txt-muted">{formatUSD(signal.liquidity)} liq</div>
                     )}
-                    <a
-                      href={signal.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 px-3 py-1 rounded-lg text-[10px] font-medium border border-[var(--crimson)] text-[var(--crimson)] bg-[var(--crimson-dim)] hover:bg-[var(--crimson)] hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                    {/* Trade on PigeonHouse button */}
+                    <button
+                      onClick={() => handleTradeOnPH(signal)}
+                      className="mt-2 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-[var(--crimson)] text-white bg-[var(--crimson)] hover:bg-[var(--crimson-muted)] transition-all shadow-sm"
                     >
-                      Trade →
-                    </a>
+                      🔥 Trade ${ticker}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -269,13 +327,12 @@ export default function PredictionsPage() {
       {/* Footer */}
       <div className="text-center space-y-1 pt-2">
         <p className="text-[10px] text-txt-muted">
-          Data from Polymarket public API · Sports noise filtered · Auto-refresh {autoRefresh ? "on" : "off"} · Not financial advice
+          Signals from Polymarket · Trade on PigeonHouse · 2% fee burns PIGEON · Auto-refresh {autoRefresh ? "on" : "off"}
         </p>
-        {data?.updatedAt && (
-          <p className="text-[10px] text-txt-disabled">
-            Last update: {new Date(data.updatedAt).toLocaleTimeString()}
-          </p>
-        )}
+        <p className="text-[10px] text-txt-disabled">
+          Not financial advice · Prediction tokens are sentiment-based, not formally settled
+          {data?.updatedAt && <> · {new Date(data.updatedAt).toLocaleTimeString()}</>}
+        </p>
       </div>
     </div>
   );
