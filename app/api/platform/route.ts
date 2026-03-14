@@ -16,6 +16,14 @@ const HIDDEN_BEFORE_EPOCH = 1773336100; // Show only LOWIQ (created 1773336129) 
 const HIDDEN_MINTS = new Set([
   "A3JaQrE8GX2KNop5io5i9mHiWdn6dfMsoUKi7pXLvQsE", // VTEST
   "8H6Gi5PysPanBHJ3tyQDU3TMghjbiZqp8AYRyaifRKxB", // VLAUNCH
+  "7Ry1iD3mVbGSHATh6S1wTGCA7ANBzB49JARMoJycoYJb", // TFIRE
+  "CSeu4egKdA7KqCYjKoiiWbpHsc9r5AX5RzgCdamnJSzs", // TEMBR
+  "D2GoaNUFrGtdojSP93TcDPnnCLofqxFiSuDnyNcHGkhk", // SIM e2e
+  "2Zxh9FScpN7gz36CZGoWJqKAobWq5kz8sWj4c2YgwC77", // SIM e2e
+  "6VpNBSN8ksjp1FGgPACfmT4q8o6Cek2Jp8vXtGXYkWPR", // SIM e2e
+  "Aui47yTjUiK5WQbivTpN11yr4jWpGAhkMQdBDpuUiR6i", // BRNT
+  "5C4CR6iygX3TVXuLyi6AzLB6V4YSziVN26RLPbd426De", // SIM e2e
+  "E4kHBW3XHovuDgPY4zZKiwJuWSAUXeiJsrx1qAwJw7iq", // TPHNX
 ]);
 
 // Old BondingCurve layout (pre-multi-quote): no quote_mint field
