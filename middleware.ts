@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const LAUNCH_UTC = "2026-03-14T21:40:00Z";
+const LAUNCH_UTC = "2026-03-14T22:50:00Z";
 const ALLOWED_HOST = "941pigeon.fun";
 
 function isLaunched(): boolean {
