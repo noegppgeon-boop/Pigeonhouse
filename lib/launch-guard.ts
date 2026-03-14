@@ -1,6 +1,6 @@
 // Launch guard — blocks API access until launch time
 // Must match the LAUNCH_UTC in LaunchGate.tsx
-export const LAUNCH_UTC = "2026-03-14T21:40:00Z";
+export const LAUNCH_UTC = "2026-03-14T22:50:00Z";
 
 export function isLaunched(): boolean {
   return Date.now() >= new Date(LAUNCH_UTC).getTime();
