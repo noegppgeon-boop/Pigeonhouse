@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp, Clock, Target, BarChart3, Flame, Rocket,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePlatformStats, type CurveItem } from "@/hooks/usePlatformStats";
+import { useRealtimeFeed } from "@/hooks/useRealtimeFeed";
 import { Skeleton } from "@/components/shared/Skeleton";
 import BN from "bn.js";
 import { formatNumber, shortenAddress, timeAgo } from "@/lib/utils";
@@ -39,8 +40,17 @@ function getStatusLabel(progress: number, complete: boolean): { label: string; c
 }
 
 export default function Board() {
-  const { stats, loading } = usePlatformStats();
+  const { stats, loading, refetch } = usePlatformStats();
+  const { events, lastUpdate } = useRealtimeFeed();
   const [activeTab, setActiveTab] = useState<TabKey>("new");
+
+  // Auto-refetch when WebSocket detects new activity
+  useEffect(() => {
+    if (lastUpdate > 0) {
+      const timer = setTimeout(() => refetch(), 500); // small debounce
+      return () => clearTimeout(timer);
+    }
+  }, [lastUpdate, refetch]);
   const [searchQuery, setSearchQuery] = useState("");
   const [quoteFilter, setQuoteFilter] = useState<QuoteAssetKey | "all">("all");
   const { watchlist, toggle: toggleWatch, isWatched } = useWatchlist();

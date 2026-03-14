@@ -24,6 +24,7 @@ import { getQuoteAssetByMint } from "@/lib/constants";
 import BN from "bn.js";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUsdPrices, toUsd } from "@/hooks/useUsdPrices";
+import { useRealtimeFeed } from "@/hooks/useRealtimeFeed";
 
 function getStatus(progress: number, complete: boolean) {
   if (complete) return { label: "Ascended", color: "text-teal", bg: "bg-teal/8 border-teal/20" };
@@ -41,12 +42,21 @@ export default function TokenPage() {
   const { add: addRecentlyViewed } = useRecentlyViewed();
   const { curve, config, loading, price, mcap, progress, refetch } =
     useBondingCurve(mintAddress);
+  const { lastUpdate } = useRealtimeFeed();
   const tokenImage = useTokenImage(curve?.uri);
   const referrer = searchParams.get("ref") || null;
   const usdPrices = useUsdPrices();
 
   const [copied, setCopied] = useState(false);
   const [mintCopied, setMintCopied] = useState(false);
+
+  // Auto-refetch on WebSocket activity
+  useEffect(() => {
+    if (lastUpdate > 0) {
+      const timer = setTimeout(() => refetch(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [lastUpdate, refetch]);
 
   // Track recently viewed
   useEffect(() => {
