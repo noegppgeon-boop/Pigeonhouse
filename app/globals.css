@@ -1214,3 +1214,14 @@ body {
 }
 .gradient-burn-subtle { background: var(--crimson-dim); }
 .glow-terra { box-shadow: var(--shadow-glow); }
+
+/* Sidebar collapse */
+@media (min-width: 768px) {
+  [data-sidebar="collapsed"] .md\:pl-sidebar {
+    padding-left: 0 !important;
+    transition: padding-left 0.2s ease;
+  }
+  [data-sidebar="open"] .md\:pl-sidebar {
+    transition: padding-left 0.2s ease;
+  }
+}

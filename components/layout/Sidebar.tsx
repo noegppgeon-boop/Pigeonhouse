@@ -46,6 +46,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const { stats } = usePlatformStats();
   const [secondaryOpen, setSecondaryOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Sync collapsed state with document for CSS targeting
+  if (typeof document !== "undefined") {
+    document.documentElement.setAttribute("data-sidebar", collapsed ? "collapsed" : "open");
+  }
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -58,7 +64,24 @@ export function Sidebar() {
   const feeBps = stats?.feeBps ?? 200;
 
   return (
-    <aside className="sidebar hidden md:flex" aria-label="Main navigation">
+    <>
+      {/* Toggle button — always visible */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className={`
+          hidden md:flex fixed top-3 z-50 items-center justify-center
+          w-6 h-6 rounded-full bg-bg-card border border-[var(--border)]
+          text-txt-muted hover:text-txt hover:border-[var(--border-3)]
+          transition-all duration-200 shadow-sm hover:shadow
+          ${collapsed ? "left-3" : "left-[var(--sidebar-width)] -translate-x-1/2"}
+        `}
+        title={collapsed ? "Open sidebar" : "Close sidebar"}
+        aria-label={collapsed ? "Open sidebar" : "Close sidebar"}
+      >
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${collapsed ? "-rotate-90" : "rotate-90"}`} style={{ transform: collapsed ? "rotate(90deg)" : "rotate(-90deg)" }} />
+      </button>
+
+    <aside className={`sidebar hidden md:flex transition-all duration-200 ${collapsed ? "!w-0 !min-w-0 !p-0 overflow-hidden opacity-0 pointer-events-none" : ""}`} aria-label="Main navigation">
 
       {/* ── 1. Logotype ── */}
       <Link href="/" className="group flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
@@ -224,6 +247,7 @@ export function Sidebar() {
         <a href="/privacy" className="text-[10px] text-txt-muted hover:text-txt-secondary transition-colors">Privacy</a>
       </div>
     </aside>
+    </>
   );
 }
 
