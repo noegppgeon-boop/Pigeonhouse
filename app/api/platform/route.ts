@@ -170,9 +170,23 @@ function getProgram() {
   return { program: new anchor.Program(idl, provider), conn };
 }
 
+// ── In-memory cache (15s TTL) ──
+let cachedResponse: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 15_000;
+
 export async function GET(req: Request) {
   const { ok } = rateLimit(getClientIP(req));
   if (!ok) return NextResponse.json({ error: "Rate limited" }, { status: 429 });
+
+  // Serve from cache if fresh
+  const now = Date.now();
+  if (cachedResponse && (now - cacheTimestamp) < CACHE_TTL_MS) {
+    return NextResponse.json(cachedResponse, {
+      headers: { "X-Cache": "HIT", "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" },
+    });
+  }
+
   try {
     const { program, conn } = getProgram();
     const pid = program.programId;
@@ -182,18 +196,31 @@ export async function GET(req: Request) {
       pid
     );
 
-    const config = await (program.account as any).globalConfig.fetch(globalConfigPDA);
+    // Known quote mints — fetch their configs in parallel with everything else
+    const KNOWN_QUOTE_MINTS = [
+      new PublicKey("4fSWEw2wbYEUCcMtitzmeGUfqinoafXxkhqZrA9Gpump"), // PIGEON
+      new PublicKey("So11111111111111111111111111111111111111112"),     // SOL
+      new PublicKey("SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3"), // SKR
+    ];
+    const quoteConfigPDAs = KNOWN_QUOTE_MINTS.map(m =>
+      PublicKey.findProgramAddressSync([Buffer.from("quote_asset"), m.toBuffer()], pid)[0]
+    );
 
-    // Fetch all BondingCurve accounts raw (to handle old+new layout)
-    // Compute discriminator: sha256("account:BondingCurve")[0..8]
+    // Compute BondingCurve discriminator
     const crypto = await import("crypto");
     const hash = crypto.createHash("sha256").update("account:BondingCurve").digest();
     const discriminator = hash.subarray(0, 8);
-    const accounts = await conn.getProgramAccounts(pid, {
-      filters: [{ memcmp: { offset: 0, bytes: anchor.utils.bytes.bs58.encode(discriminator) } }],
-    });
 
-    const curves = accounts.map((item) => {
+    // Fire ALL RPC calls in parallel
+    const [config, accounts, quoteAccountsRaw] = await Promise.all([
+      (program.account as any).globalConfig.fetch(globalConfigPDA),
+      conn.getProgramAccounts(pid, {
+        filters: [{ memcmp: { offset: 0, bytes: anchor.utils.bytes.bs58.encode(discriminator) } }],
+      }),
+      conn.getMultipleAccountsInfo(quoteConfigPDAs),
+    ]);
+
+    const curves = accounts.map((item: any) => {
       try {
         return {
           publicKey: item.pubkey.toBase58(),
@@ -205,20 +232,14 @@ export async function GET(req: Request) {
       }
     }).filter(Boolean);
 
-    // Fetch quote-specific graduation thresholds for all unique quote mints
-    const quoteMints = new Set<string>();
-    for (const c of curves) {
-      if (c && (c as any).account?.quoteMint) quoteMints.add((c as any).account.quoteMint);
-    }
+    // Parse quote configs from batch response
     const quoteGradMap: Record<string, string> = {};
-    for (const qm of quoteMints) {
+    for (let i = 0; i < KNOWN_QUOTE_MINTS.length; i++) {
+      const raw = quoteAccountsRaw[i];
+      if (!raw) continue;
       try {
-        const qmPk = new PublicKey(qm);
-        const [qcPDA] = PublicKey.findProgramAddressSync(
-          [Buffer.from("quote_asset"), qmPk.toBuffer()], pid
-        );
-        const qc = await (program.account as any).quoteAssetConfig.fetch(qcPDA);
-        quoteGradMap[qm] = qc.graduationThreshold.toString();
+        const qc = (program as any).coder.accounts.decode("quoteAssetConfig", raw.data);
+        quoteGradMap[KNOWN_QUOTE_MINTS[i].toBase58()] = qc.graduationThreshold.toString();
       } catch { /* skip */ }
     }
 
@@ -231,7 +252,7 @@ export async function GET(req: Request) {
       return true;
     });
 
-    return NextResponse.json({
+    const responseData = {
       config: {
         authority: config.authority.toBase58(),
         pigeonMint: config.pigeonMint.toBase58(),
@@ -243,6 +264,14 @@ export async function GET(req: Request) {
       },
       quoteGradMap,
       curves: visibleCurves,
+    };
+
+    // Update cache
+    cachedResponse = responseData;
+    cacheTimestamp = Date.now();
+
+    return NextResponse.json(responseData, {
+      headers: { "X-Cache": "MISS", "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" },
     });
   } catch (err: any) {
     console.error("[API /platform] Error:", err.message);

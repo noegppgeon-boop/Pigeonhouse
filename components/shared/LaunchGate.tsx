@@ -9,7 +9,7 @@ import {
   PenToolIcon, RepeatIcon, RocketIcon,
 } from "./LaunchIcons";
 
-const LAUNCH_UTC = "2026-03-14T22:50:00Z";
+const LAUNCH_UTC = "2026-03-14T21:00:00Z"; // LIVE
 
 interface TimeLeft { hours: number; minutes: number; seconds: number; total: number; }
 
