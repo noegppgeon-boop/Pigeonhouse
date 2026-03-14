@@ -106,14 +106,14 @@ export default function Board() {
     <div className="animate-fade-in space-y-4">
 
       {/* ── Header Row ── */}
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
           <h1 className="text-h1 text-txt">{SECTION_HEADERS.board.title}</h1>
-          <p className="lore-subtitle">{SECTION_HEADERS.board.lore}</p>
+          <p className="lore-subtitle hidden sm:block">{SECTION_HEADERS.board.lore}</p>
         </div>
         <Link
           href="/launch"
-          className="shrink-0 flex items-center gap-2 px-5 py-2.5 text-[13px] font-bold text-[#F5F0E8] bg-crimson rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+          className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-[13px] font-bold text-[#F5F0E8] bg-crimson rounded-lg hover:opacity-90 transition-opacity shadow-sm w-full sm:w-auto"
         >
           <Rocket className="h-4 w-4" />
           Inscribe Token
@@ -121,7 +121,7 @@ export default function Board() {
       </div>
 
       {/* ── Summary Strip ── */}
-      <div className="flex items-center gap-0 overflow-x-auto border border-[var(--border)] rounded-lg bg-bg-card">
+      <div className="grid grid-cols-2 sm:grid-cols-4 sm:flex sm:items-center gap-0 border border-[var(--border)] rounded-lg bg-bg-card">
         {loading ? (
           <div className="flex gap-4 p-3">
             {[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-28" />)}
@@ -330,20 +330,20 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
                     {status.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px]">
+                <div className="flex items-center gap-2 text-[11px] flex-wrap">
                   <span className="font-mono text-txt-muted">${symbol}</span>
                   {price > 0 && (
                     <>
-                      <span className="text-txt-disabled">·</span>
-                      <span className="font-mono text-txt-secondary">
+                      <span className="text-txt-disabled hidden sm:inline">·</span>
+                      <span className="font-mono text-txt-secondary truncate max-w-[100px]">
                         {price < 0.001 ? price.toExponential(1) : price.toFixed(6)}
                       </span>
                     </>
                   )}
                   {createdAt > 0 && (
                     <>
-                      <span className="text-txt-disabled">·</span>
-                      <span className="text-txt-muted">{timeAgo(createdAt)}</span>
+                      <span className="text-txt-disabled hidden sm:inline">·</span>
+                      <span className="text-txt-muted whitespace-nowrap">{timeAgo(createdAt)}</span>
                     </>
                   )}
                 </div>
@@ -447,5 +447,5 @@ function SummaryCell({ label, value, icon: Icon, suffix, color }: {
 }
 
 function SummaryDivider() {
-  return <div className="w-px h-8 bg-[var(--border)] shrink-0" />;
+  return <div className="hidden sm:block w-px h-8 bg-[var(--border)] shrink-0" />;
 }
