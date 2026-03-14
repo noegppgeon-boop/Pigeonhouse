@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ArrowUpRight, ArrowDownRight, Zap, ExternalLink } from "lucide-react";
 import { EMPTY_STATES, LOADING_STATES } from "@/lib/lore";
 
@@ -19,26 +19,33 @@ interface Trade {
 interface Props {
   mint: string;
   quoteSymbol?: string;
+  lastUpdate?: number;
 }
 
-export default function RecentTrades({ mint, quoteSymbol: defaultQuoteSymbol = "PIGEON" }: Props) {
+export default function RecentTrades({ mint, quoteSymbol: defaultQuoteSymbol = "PIGEON", lastUpdate = 0 }: Props) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(`/api/trades/${mint}`);
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        setTrades(data.trades || []);
-      } catch { setTrades([]); }
-      finally { setLoading(false); }
-    }
-    load();
-    const interval = setInterval(load, 15_000);
-    return () => clearInterval(interval);
+  const fetchTrades = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/trades/${mint}`);
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      setTrades(data.trades || []);
+    } catch { setTrades([]); }
+    finally { setLoading(false); }
   }, [mint]);
+
+  useEffect(() => {
+    fetchTrades();
+    const interval = setInterval(fetchTrades, 15_000);
+    return () => clearInterval(interval);
+  }, [fetchTrades]);
+
+  // Refetch on WebSocket activity
+  useEffect(() => {
+    if (lastUpdate > 0) fetchTrades();
+  }, [lastUpdate, fetchTrades]);
 
   function timeAgo(ts: number) {
     const diff = Math.floor(Date.now() / 1000 - ts);

@@ -154,7 +154,7 @@ interface ChartProps {
   quoteSymbol?: string;
 }
 
-export default function ChartArea({ mint, progress = 0, isComplete = false, graduationThreshold = 0, currentReserves = 0, quoteSymbol = "PIGEON" }: ChartProps) {
+export default function ChartArea({ mint, progress = 0, isComplete = false, graduationThreshold = 0, currentReserves = 0, quoteSymbol = "PIGEON", lastUpdate = 0 }: ChartProps & { lastUpdate?: number }) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [tf, setTf] = useState<Timeframe | null>(null);
@@ -185,6 +185,12 @@ export default function ChartArea({ mint, progress = 0, isComplete = false, grad
     const iv = setInterval(load, 30_000);
     return () => { cancelled = true; clearInterval(iv); };
   }, [mint]);
+
+  // Refetch on WebSocket activity
+  useEffect(() => {
+    if (!lastUpdate || !mint) return;
+    fetch(`/api/trades/${mint}`).then(r => r.json()).then(d => setTrades(d.trades || [])).catch(() => {});
+  }, [lastUpdate, mint]);
 
   // Auto-select timeframe
   useEffect(() => {

@@ -309,8 +309,9 @@ export default function TokenPage() {
             graduationThreshold={config.graduationPigeonAmount.toNumber() / 1e6}
             currentReserves={curve.realPigeonReserves.toNumber() / 1e6}
             quoteSymbol={quoteSymbol}
+            lastUpdate={lastUpdate}
           />
-          <RecentTrades mint={mintAddress} quoteSymbol={quoteSymbol} />
+          <RecentTrades mint={mintAddress} quoteSymbol={quoteSymbol} lastUpdate={lastUpdate} />
           {/* <TokenChat mint={mintAddress} /> — Coming soon */}
 
           {/* Token Info */}
