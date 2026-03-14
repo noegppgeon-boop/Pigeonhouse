@@ -463,11 +463,15 @@ body {
   height: 100vh;
   background: var(--bg-card);
   border-right: 1px solid var(--border);
-  display: flex;
   flex-direction: column;
   z-index: 40;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Mobile: hidden. Desktop: flex. Let Tailwind control display. */
+@media (max-width: 767px) {
+  .sidebar { display: none !important; }
 }
 
 /* Subtle texture on sidebar */
