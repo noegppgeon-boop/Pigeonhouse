@@ -137,18 +137,14 @@ export default function PredictionsPage() {
     return () => clearInterval(interval);
   }, [autoRefresh, fetchData]);
 
-  const handleTradeOnPH = (signal: Signal) => {
-    // Navigate to launch page with pre-filled prediction token details
+  const handleTradeOnPH = (signal: Signal, side: "YES" | "NO") => {
     const ticker = generateTicker(signal.title);
-    const name = signal.title.length > 30
-      ? signal.title.slice(0, 28) + "…"
-      : signal.title;
+    const shortTitle = signal.title.length > 25 ? signal.title.slice(0, 23) + "…" : signal.title;
     const params = new URLSearchParams({
-      name: name,
-      symbol: ticker,
+      name: `${shortTitle} ${side}`,
+      symbol: `${ticker}${side}`,
       prediction: "true",
       source: signal.url,
-      yesPrice: String(signal.yesPrice || 0.5),
     });
     router.push(`/launch?${params.toString()}`);
   };
@@ -196,9 +192,9 @@ export default function PredictionsPage() {
           <span className="text-lg mt-0.5">🔥</span>
           <div className="text-[12px] text-txt-secondary">
             <span className="font-semibold text-[var(--crimson)]">How it works:</span>{" "}
-            See a signal → hit <span className="font-medium text-txt">Trade on PigeonHouse</span> → launches a prediction token on a bonding curve → 
-            anyone can buy/sell with their Solana wallet → 2% fee burns PIGEON.
-            <span className="text-txt-muted ml-1">No Polygon wallet needed.</span>
+            See a signal → pick <span className="font-medium text-[var(--teal)]">YES</span> or <span className="font-medium text-[var(--crimson)]">NO</span> → 
+            launches a prediction token on a bonding curve → anyone can trade with their Solana wallet → 
+            2% fee burns PIGEON on every trade. <span className="text-txt-muted">Resolution burns 50% of the losing side.</span>
           </div>
         </div>
       </div>
@@ -309,13 +305,21 @@ export default function PredictionsPage() {
                     {signal.liquidity > 0 && (
                       <div className="text-[10px] text-txt-muted">{formatUSD(signal.liquidity)} liq</div>
                     )}
-                    {/* Trade on PigeonHouse button */}
-                    <button
-                      onClick={() => handleTradeOnPH(signal)}
-                      className="mt-2 px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-[var(--crimson)] text-white bg-[var(--crimson)] hover:bg-[var(--crimson-muted)] transition-all shadow-sm"
-                    >
-                      🔥 Trade ${ticker}
-                    </button>
+                    {/* Trade YES/NO pair */}
+                    <div className="flex gap-1.5 mt-2">
+                      <button
+                        onClick={() => handleTradeOnPH(signal, "YES")}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-[var(--teal)] text-white bg-[var(--teal)] hover:opacity-90 transition-all shadow-sm"
+                      >
+                        ✓ YES
+                      </button>
+                      <button
+                        onClick={() => handleTradeOnPH(signal, "NO")}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-[var(--crimson)] text-white bg-[var(--crimson)] hover:opacity-90 transition-all shadow-sm"
+                      >
+                        ✗ NO
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
