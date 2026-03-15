@@ -12,7 +12,7 @@ export type RealtimeEvent = {
   amount?: string;
 };
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_RPC_URL?.replace("https://", "wss://");
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || (process.env.NEXT_PUBLIC_RPC_URL ? process.env.NEXT_PUBLIC_RPC_URL.replace("https://", "wss://") : "");
 
 /**
  * Subscribe to PigeonHouse program logs via WebSocket.
@@ -34,12 +34,18 @@ export function useRealtimeFeed(enabled = true) {
   }, []);
 
   useEffect(() => {
-    if (!enabled || !WS_URL) return;
+    if (!enabled || !WS_URL || !WS_URL.startsWith("wss://")) return;
 
-    const conn = new Connection(WS_URL, {
-      wsEndpoint: WS_URL,
-      commitment: "confirmed",
-    });
+    let conn: Connection;
+    try {
+      conn = new Connection(WS_URL.replace("wss://", "https://"), {
+        wsEndpoint: WS_URL,
+        commitment: "confirmed",
+      });
+    } catch {
+      console.warn("[RealtimeFeed] Failed to create connection");
+      return;
+    }
     connRef.current = conn;
 
     try {
