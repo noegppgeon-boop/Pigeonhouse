@@ -255,6 +255,7 @@ export default function Board() {
                 index={i}
                 isWatched={isWatched(item.account.tokenMint.toBase58())}
                 onToggleWatch={toggleWatch}
+                lastUpdate={lastUpdate}
               />
             ))}
           </motion.div>
@@ -268,10 +269,20 @@ export default function Board() {
    BOARD CARD
    ═══════════════════════════════════════ */
 
-function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: {
+function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch, lastUpdate = 0 }: {
   item: CurveItem; graduationAmount: BN; index: number;
   isWatched: boolean; onToggleWatch: (mint: string) => void;
+  lastUpdate?: number;
 }) {
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    if (lastUpdate > 0) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [lastUpdate]);
   const { account } = item;
   const mint = account.tokenMint.toBase58();
   const name = account.name || "Unknown";
@@ -315,7 +326,7 @@ function BoardCard({ item, graduationAmount, index, isWatched, onToggleWatch }: 
       transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}
     >
       <Link href={`/token/${mint}`} className="block group">
-        <div className="card card-interactive hover-lift p-0 h-full overflow-hidden">
+        <div className={`card card-interactive hover-lift p-0 h-full overflow-hidden transition-all duration-300 ${pulse ? "ring-2 ring-crimson/40 shadow-lg shadow-crimson/10" : ""}`}>
 
           {/* ── Card Header ── */}
           <div className="p-3.5 pb-0">
